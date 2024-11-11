@@ -1,12 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import SignUpScreen from './App/Screens/Register';
+import LoginScreen from './App/Screens/Login';
+import HomeScreen from './App/Screens/Dashboard';
+import ProgressScreen from './App/Screens/Progress';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <ProgressScreen/>
   );
 }
 
