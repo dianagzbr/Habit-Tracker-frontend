@@ -23,13 +23,16 @@ const LoginScreen = ({ navigation }) => {
     if (validateForm()) {
       // Proceed with login logic
       Alert.alert('Success', 'Form is valid! Proceeding with login...');
+      navigation.navigate('HomeScreen');  // Navegar a la HomeScreen si es válido
     }
   };
 
   return (
     <View style={styles.container}>
+
       <Text style={styles.title}>Log In</Text>
-      <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+
+      <TouchableOpacity onPress={() => navigation.navigate('SignUpScreen')}>
         <Text style={styles.signUpText}>Sign Up</Text>
       </TouchableOpacity>
 
@@ -40,6 +43,7 @@ const LoginScreen = ({ navigation }) => {
         value={email}
         onChangeText={setEmail}
       />
+
       <TextInput
         placeholder="Password"
         style={styles.input}
@@ -49,7 +53,7 @@ const LoginScreen = ({ navigation }) => {
       />
 
       <View style={styles.optionsContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('PasswordScreen')}>
           <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
