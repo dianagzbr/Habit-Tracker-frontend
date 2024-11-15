@@ -29,13 +29,27 @@ const SignUpScreen = ({ navigation }) => {
     return true;
   };
 
+  const handlePasswordRecovery = () => {
+    if (validateForm()) {
+      // Generación de un token aleatorio de 5 dígitos
+      const token = Math.floor(10000 + Math.random() * 90000).toString();
+
+      // Lógica para simular el envío del token por correo (en producción, aquí se llamaría a un servicio)
+      console.log("Token enviado a:", email, "Token:", token);
+
+      // Navega a la pantalla de verificación y envía el token como parámetro
+      navigation.navigate('VerifyEmailScreen', { token });
+    }
+  };
+
+/*
   const handleSignUp = () => {
     if (validateForm()) {
       // Proceed with sign-up logic
       Alert.alert('Success', 'Form is valid! Proceeding with sign-up...');
     }
   };
-
+*/
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign Up</Text>
@@ -75,7 +89,7 @@ const SignUpScreen = ({ navigation }) => {
         colors={['#FF742B', '#FF8C48']}
         style={styles.button}
       >
-        <TouchableOpacity onPress={handleSignUp}>
+        <TouchableOpacity onPress={handlePasswordRecovery}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </LinearGradient>

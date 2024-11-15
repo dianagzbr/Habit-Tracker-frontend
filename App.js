@@ -7,6 +7,7 @@ import SignUpScreen from './App/Screens/Register';
 import LoginScreen from './App/Screens/Login';
 import PasswordScreen from './App/Screens/Password';
 import VerifyOTPScreen from './App/Screens/VerifyOTP';
+import VerifyEmailScreen from './App/Screens/VerifyEmail';
 import ResetPasswordScreen from './App/Screens/ResetPassword';
 import HomeScreen from './App/Screens/Dashboard';
 import ProgressScreen from './App/Screens/Progress';
@@ -21,6 +22,7 @@ export default function App() {
     <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
     <Stack.Screen name="PasswordScreen" component={PasswordScreen} />
     <Stack.Screen name="VerifyOTPScreen" component={VerifyOTPScreen} />
+    <Stack.Screen name="VerifyEmailScreen" component={VerifyEmailScreen} />
     <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} />
     <Stack.Screen name="HomeScreen" component={HomeScreen} />
     <Stack.Screen name="ProgressScreen" component={ProgressScreen} />
