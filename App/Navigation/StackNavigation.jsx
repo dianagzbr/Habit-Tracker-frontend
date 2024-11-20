@@ -49,16 +49,6 @@ const StackNavigation = () => {
                 options={{headerShown: false}}
             />
             <Stack.Screen
-                name="PasswordScreen"
-                component={PasswordScreen}
-                options={{headerShown: false}}
-            />
-            <Stack.Screen
-                name="VerifyOTPScreen"
-                component={VerifyOTPScreen}
-                options={{headerShown: false}}
-            />
-            <Stack.Screen
                 name="VerifyEmailScreen"
                 component={VerifyEmailScreen}
                 options={{headerShown: false}}
