@@ -16,6 +16,7 @@ import SettingsScreen from "../Screens/Settings";
 import AccountScreen from "../Screens/Account";
 import TermsAndConditionsScreen from "../Screens/TermsAndConditions";
 import PrivacyPolicyScreen from "../Screens/PrivacyPolicy";
+import VerifyEmailScreen from "../Screens/VerifyEmail";
 
 const Stack = createStackNavigator();
 
@@ -45,6 +46,21 @@ const StackNavigation = () => {
             <Stack.Screen
                 name="ResetPasswordScreen"
                 component={ResetPasswordScreen}
+                options={{headerShown: false}}
+            />
+            <Stack.Screen
+                name="PasswordScreen"
+                component={PasswordScreen}
+                options={{headerShown: false}}
+            />
+            <Stack.Screen
+                name="VerifyOTPScreen"
+                component={VerifyOTPScreen}
+                options={{headerShown: false}}
+            />
+            <Stack.Screen
+                name="VerifyEmailScreen"
+                component={VerifyEmailScreen}
                 options={{headerShown: false}}
             />
             <Stack.Screen
@@ -100,6 +116,7 @@ const StackNavigation = () => {
                 component={PrivacyPolicyScreen}
                 options={{title: ' '}}
             />
+
         </Stack.Navigator>
     )
 }

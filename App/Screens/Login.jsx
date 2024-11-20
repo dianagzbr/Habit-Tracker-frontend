@@ -3,9 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
+import CustomModal from '../Components/CustomModal'
 import axios from 'axios';
 
-import CustomModal from '../Components/CustomModal'
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,12 +15,12 @@ const LoginScreen = ({ navigation }) => {
 
   const validateForm = () => {
     if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setModalMessage('Please enter a valid email address.');
+      setModalMessage('Por favor, ingresa una dirección de correo electrónico válida.');
       setModalVisible(true);
       return false;
     }
     if (password.length < 8) {
-      setModalMessage('Password must be at least 8 characters long.');
+      setModalMessage('La contraseña debe tener al menos 8 caracteres.');
       setModalVisible(true);
       return false;
     }
@@ -42,7 +42,8 @@ const LoginScreen = ({ navigation }) => {
           await AsyncStorage.setItem('authToken', token);
           console.log('Token saved:', token);
   
-          Alert.alert('Login succesfull', `Welcome, ${user.username}!`);
+          setModalMessage(`¡Inicio de Sesión Exitoso! Bienvenido, ${user.username}!`);
+          setModalVisible(true);
           navigation.navigate('HomeScreen', { userId: user.id });
         }
       } catch (error) {
@@ -50,23 +51,20 @@ const LoginScreen = ({ navigation }) => {
           const { status } = error.response;
 
           if (status === 404) {
-            Alert.alert('Error', 'The email is not registered.');
+            setModalMessage('Error: El correo electrónico no esta registrado.');
           } else if (status === 400) {
-            Alert.alert('Error', 'The password is incorrect.');
+            setModalMessage('Error: La contraseña es incorrecta.');
           } else {
-            Alert.alert('Error', `Unexpected error: ${status}`);
+            setModalMessage(`Error inesperado: ${status}`);
           }
         } else if (error.request) {
           console.error('Network error:', error.request);
-          Alert.alert('Error', 'Could not connect to the server. Please check your Internet connection.');
+          setModalMessage('Error: No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.');
         } else {
           console.error('Error:', error.message);
-          Alert.alert('Error', 'An unexpected error occurred.');
+          setModalMessage('Error: A ocurrido un error inesperado.');
         }
       }
-      // Proceed with login logic
-      // setModalMessage('Form is valid! Proceeding with login...');
-      // setModalVisible(true);
       navigation.navigate('HomeScreen');  
     }
   };
@@ -74,14 +72,14 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Log In</Text>
+      <Text style={styles.title}>Iniciar Sesión</Text>
 
       <TouchableOpacity onPress={() => navigation.navigate("SingUpScreen")}>
-        <Text style={styles.signUpText}>Sign Up</Text>
+        <Text style={styles.signUpText}>Registrarse</Text>
       </TouchableOpacity>
 
       <TextInput
-        placeholder="Email"
+        placeholder="Correo Electrónico"
         style={styles.input}
         keyboardType="email-address"
         value={email}
@@ -89,7 +87,7 @@ const LoginScreen = ({ navigation }) => {
       />
 
       <TextInput
-        placeholder="Password"
+        placeholder="Contraseña"
         style={styles.input}
         secureTextEntry
         value={password}
@@ -98,7 +96,7 @@ const LoginScreen = ({ navigation }) => {
 
       <View style={styles.optionsContainer}>
         <TouchableOpacity onPress={() => navigation.navigate("PasswordScreen")}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
         </TouchableOpacity>
       </View>
 
@@ -107,7 +105,7 @@ const LoginScreen = ({ navigation }) => {
         style={styles.button}
       >
         <TouchableOpacity onPress={handleLogin}>
-          <Text style={styles.buttonText}>Log In</Text>
+          <Text style={styles.buttonText}>Iniciar Sesión</Text>
         </TouchableOpacity>
       </LinearGradient>
 
