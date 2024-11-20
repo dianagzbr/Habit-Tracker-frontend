@@ -1,27 +1,53 @@
 // ResetPassword.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
+import axios from 'axios';
 
-const ResetPasswordScreen = ({ navigation }) => {
+const ResetPasswordScreen = ({ route, navigation }) => {
+  const { email } = route.params; 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handlePasswordReset = () => {
-    // Verifica que ambas contraseñas coincidan
+  const validateForm = () => {
+    if (newPassword.length < 8) {
+      Alert.alert('Validation Error', 'Password must be at least 8 characters long.');
+      return false;
+    }
     if (newPassword !== confirmPassword) {
       Alert.alert('Error', 'Las contraseñas no coinciden.');
-      return;
+      return false;
     }
+    return true;
+  };
 
-    if (newPassword.length < 8) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres.');
-      return;
+  const handlePasswordReset = async () => {
+    if (validateForm()) {
+      try {
+        const response = await axios.post('http://192.168.1.143:8000/api/resetpassword', {
+          email: email,
+          password: newPassword,
+        });
+
+        if (response.status === 200) {
+          const { token, user } = response.data;
+
+          await AsyncStorage.setItem("authToken", token);
+          console.log("Token guardado:", token);
+
+          Alert.alert("Nuevo registro de contraseña exitoso", `Bienvenido, ${user.username}!`);
+          const userId = response.data.id
+          navigation.navigate('HomeScreen', {userId});
+        } else {
+          Alert.alert('Error', 'Hubo un error en el registro. Inténtalo nuevamente.');
+        }
+      } catch (error) {
+        console.error('Error al registrar al usuario:', error.response?.data || error.message);
+        Alert.alert('Error', 'Hubo un error en el registro. Verifica los datos e inténtalo de nuevo.');
+      }
+
     }
-
-    // Aquí puedes agregar la lógica para enviar la nueva contraseña al backend
-    Alert.alert('Éxito', 'Contraseña restablecida correctamente.');
-    navigation.navigate('LoginScreen'); // Navega de vuelta a la pantalla de inicio de sesión
   };
 
   return (

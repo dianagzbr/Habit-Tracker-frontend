@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
+import axios from 'axios';
 import CustomModal from '../Components/CustomModal';
 
 const SignUpScreen = ({ navigation }) => {
@@ -16,6 +17,10 @@ const SignUpScreen = ({ navigation }) => {
     if (!name.trim()) {
       setModalMessage('Name is required.');
       setModalVisible(true);
+      return false;
+    }
+    if(name.includes(' ')) {
+      Alert.alert('Validation Error', 'Spaces are not allowed in the name. Please use underscores (_) instead.');
       return false;
     }
     if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -36,13 +41,59 @@ const SignUpScreen = ({ navigation }) => {
     return true;
   };
 
-  const handleSignUp = () => {
+  const handlePasswordRecovery = async () => {
     if (validateForm()) {
+      try {
+        const checkResponse = await axios.post('http://192.168.1.143:8000/api/checkdata/', {
+          username: name,
+          email: email,
+        });
+
+        if (checkResponse.status === 200) {
+          const sendCodeResponse = await axios.post('http://192.168.1.143:8000/api/send-code/', { 
+            email
+          });
+
+          if (sendCodeResponse.status === 200) {
+            const { message } = sendCodeResponse.data;
+            console.log(message);
+            console.log('Respuesta del backend:', sendCodeResponse.data);
+
+            Alert.alert(
+              "Valid data", "Check your emai");
+            // Navega a la pantalla de verificación
+            navigation.navigate('VerifyEmailScreen', { 
+              OTPtoken: sendCodeResponse.data.code,
+              userData: { name, email, password }
+            });
+          } else {
+            alert('Hubo un problema al enviar el código OTP. Inténtalo de nuevo.');
+          }
+        } else {
+          alert('El correo o el nombre de usuario no están registrados.');
+        }
+      } catch (error) {
+        if (error.response) {
+          const { status } = error.response;
+
+          if (status === 400) {
+            Alert.alert('Error', 'The email or username is already registered.');
+          }  else {
+            Alert.alert('Error', `Unexpected error: ${status}`);
+          }
+        } else if (error.request) {
+          console.error('Network error:', error.request);
+          Alert.alert('Error', 'Could not connect to the server. Please check your Internet connection.');
+        } else {
+          console.error('Error:', error.message);
+          Alert.alert('Error', 'An unexpected error occurred.');
+        }
+      }
       // Proceed with sign-up logic
       setModalMessage('Form is valid! Proceeding with sign-up...');
       setModalVisible(true);
     }
-  };
+};
 
   return (
     <View style={styles.container}>
@@ -83,7 +134,7 @@ const SignUpScreen = ({ navigation }) => {
         colors={['#FF742B', '#FF8C48']}
         style={styles.button}
       >
-        <TouchableOpacity onPress={handleSignUp}>
+        <TouchableOpacity onPress={handlePasswordRecovery}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </LinearGradient>

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native
 import { MaterialIcons, AntDesign } from '@expo/vector-icons';
 
 const HomeScreen = ({ navigation }) => {
+  //const { userId } = route.params;const { userId } = route.params;
   const [habits, setHabits] = useState([
     {
       id: 1,
