@@ -1,14 +1,128 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign, Entypo } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import axios from 'axios';
 
 const AccountScreen = () => {
-  const [name, setName] = useState('Susy');
-  const [email, setEmail] = useState('examplemail@mail.com');
-  const [password, setPassword] = useState('********');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('********');
+  const [userId, setUserId] = useState(null); 
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [profileImage, setProfileImage] = useState(null);
+
+  const validatePassword = () => {
+    if (password.length < 8) {
+      Alert.alert('Validation Error', 'Debes agregar una contraseña de al menos 8 digitos.');
+      return false;
+    }
+    if (password !== passwordConfirmation) {
+      Alert.alert('Error', 'Las contraseñas no coinciden.');
+      return false;
+    }
+    return true;
+  };
+
+  const validateForm = () => {
+    if (!name.trim()) {
+      setModalMessage('El nombre es obligatorio.');
+      setModalVisible(true);
+      return false;
+    }
+    if(name.includes(' ')) {
+      setModalMessage('No se permiten espacios en el nombre.Por favor, use guiones bajos (_) en su lugar.');
+      setModalVisible(true);
+      return false;
+    }
+    if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      setModalMessage('Por favor, ingrese una dirección de correo electrónico válida.');
+      setModalVisible(true);
+      return false;
+    }
+    return true;
+  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');  
+        if (!token) {
+          console.error('No se encontró el token de usuario');
+          return;
+        }
+        const response = await axios.post(
+          'http://192.168.1.143:8000/api/profile/',
+          {},
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          }
+        );
+        const { username, email, foto_perfil, id } = response.data;
+        setName(username);
+        setEmail(email);
+        setProfileImage(foto_perfil);
+        setUserId(id);
+      } catch (error) {
+        console.error('Error al obtener los datos del perfil:', error);
+        Alert.alert('Error', 'No se pudo cargar la información del perfil.');
+      }
+    }; 
+    fetchUserData();
+  }, [userId]);
+
+
+    const handleUpdate = async () => {
+      if (validateForm()) {
+        try {
+          const formData = new FormData();
+    
+          formData.append('username', name);
+          formData.append('email', email);
+    
+        if (profileImage && profileImage.startsWith('file://')) {
+          const filename = profileImage.split('/').pop(); 
+          const fileExtension = filename.split('.').pop();
+          const mimeType = `image/${fileExtension}`; 
+    
+          formData.append('foto_perfil', {
+            uri: profileImage,
+            name: filename,
+            type: mimeType,
+          });
+        }
+          const response = await axios.patch(
+            `http://192.168.1.143:8000/api/usuarios/${userId}/`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data', 
+              },
+            }
+          );     
+          if (password) {
+          if(validatePassword()) {
+            const response = await axios.post('http://192.168.1.143:8000/api/resetpassword', {
+              email: email,
+              password: password,
+            }
+            );
+          }}
+            Alert.alert('Éxito', 'Tu perfil ha sido actualizado correctamente.');
+            console.log('Datos actualizados:', response.data);
+           
+        } catch (error) {
+          console.error('Error al actualizar el perfil:', error);
+          Alert.alert('Error', 'No se pudo actualizar el perfil.');
+        }
+      }
+      
+    };
+  
+  
 
   const handlePickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -23,11 +137,6 @@ const AccountScreen = () => {
     if (!result.cancelled) {
       setProfileImage(result.assets[0].uri);
     }
-  };
-
-  const handleUpdate = () => {
-    // Logic to update account information
-    alert('Account information updated successfully!');
   };
 
   return (
@@ -64,6 +173,7 @@ const AccountScreen = () => {
 
       <View style={styles.inputContainer}>
         <TextInput
+          placeholder='********'
           style={styles.input}
           value={password}
           secureTextEntry
@@ -74,6 +184,7 @@ const AccountScreen = () => {
 
       <View style={styles.inputContainer}>
         <TextInput
+          placeholder='********'
           style={styles.input}
           value={passwordConfirmation}
           secureTextEntry
