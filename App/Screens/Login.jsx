@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
-
+import CustomModal from '../Components/CustomModal'
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const validateForm = () => {
     if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      Alert.alert('Validation Error', 'Please enter a valid email address.');
+      setModalMessage('Please enter a valid email address.');
+      setModalVisible(true);
       return false;
     }
     if (password.length < 8) {
-      Alert.alert('Validation Error', 'Password must be at least 8 characters long.');
+      setModalMessage('Password must be at least 8 characters long.');
+      setModalVisible(true);
       return false;
     }
     return true;
@@ -22,17 +26,17 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = () => {
     if (validateForm()) {
       // Proceed with login logic
-      Alert.alert('Success', 'Form is valid! Proceeding with login...');
-      navigation.navigate('HomeScreen');  // Navegar a la HomeScreen si es válido
+      // setModalMessage('Form is valid! Proceeding with login...');
+      // setModalVisible(true);
+      navigation.navigate('HomeScreen');  
     }
   };
 
   return (
     <View style={styles.container}>
-
       <Text style={styles.title}>Log In</Text>
 
-      <TouchableOpacity onPress={() => navigation.navigate('SignUpScreen')}>
+      <TouchableOpacity onPress={() => navigation.navigate("SingUpScreen")}>
         <Text style={styles.signUpText}>Sign Up</Text>
       </TouchableOpacity>
 
@@ -53,7 +57,7 @@ const LoginScreen = ({ navigation }) => {
       />
 
       <View style={styles.optionsContainer}>
-        <TouchableOpacity onPress={() => navigation.navigate('PasswordScreen')}>
+        <TouchableOpacity onPress={() => navigation.navigate("PasswordScreen")}>
           <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
@@ -67,11 +71,12 @@ const LoginScreen = ({ navigation }) => {
         </TouchableOpacity>
       </LinearGradient>
 
-      <Text style={styles.orText}>Or log in with:</Text>
-
-      <TouchableOpacity style={styles.googleButton}>
-        <AntDesign name="google" size={24} color="black" />
-      </TouchableOpacity>
+      {/* Usando el Modal Reutilizable */}
+      <CustomModal
+        visible={modalVisible}
+        message={modalMessage}
+        onClose={() => setModalVisible(false)}
+      />
     </View>
   );
 };

@@ -1,29 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
+import CustomModal from '../Components/CustomModal';
 
 const SignUpScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const validateForm = () => {
     if (!name.trim()) {
-      Alert.alert('Validation Error', 'Name is required.');
+      setModalMessage('Name is required.');
+      setModalVisible(true);
       return false;
     }
     if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      Alert.alert('Validation Error', 'Please enter a valid email address.');
+      setModalMessage('Please enter a valid email address.');
+      setModalVisible(true);
       return false;
     }
     if (password.length < 8) {
-      Alert.alert('Validation Error', 'Password must be at least 8 characters long.');
+      setModalMessage('Password must be at least 8 characters long.');
+      setModalVisible(true);
       return false;
     }
     if (password !== passwordConfirmation) {
-      Alert.alert('Validation Error', 'Passwords do not match.');
+      setModalMessage('Passwords do not match.');
+      setModalVisible(true);
       return false;
     }
     return true;
@@ -32,7 +39,8 @@ const SignUpScreen = ({ navigation }) => {
   const handleSignUp = () => {
     if (validateForm()) {
       // Proceed with sign-up logic
-      Alert.alert('Success', 'Form is valid! Proceeding with sign-up...');
+      setModalMessage('Form is valid! Proceeding with sign-up...');
+      setModalVisible(true);
     }
   };
 
@@ -80,11 +88,11 @@ const SignUpScreen = ({ navigation }) => {
         </TouchableOpacity>
       </LinearGradient>
 
-      <Text style={styles.orText}>Or sign up with:</Text>
-
-      <TouchableOpacity style={styles.googleButton}>
-        <AntDesign name="google" size={24} color="black" />
-      </TouchableOpacity>
+      <CustomModal
+        visible={modalVisible}
+        message={modalMessage}
+        onClose={() => setModalVisible(false)}
+      />
     </View>
   );
 };
