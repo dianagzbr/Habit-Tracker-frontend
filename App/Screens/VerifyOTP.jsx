@@ -1,11 +1,14 @@
+
 import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const VerifyOTPScreen = ({ route, navigation }) => {
-    const { token } = route.params; // Obtenemos el token desde los parámetros de navegación
+    const { OTPtoken, email } = route.params; // Obtenemos el token desde los parámetros de navegación
     const [otp, setOtp] = useState(['', '', '', '', '']); // Arreglo para cada dígito del OTP
     const inputRefs = useRef([]); // Creamos las referencias para cada campo de OTP
+
+    console.log('Token recibidooo:', OTPtoken);// aqui me da el mismo token que me llego al correo
   
     // Maneja el cambio de cada dígito del OTP
     const handleChange = (text, index) => {
@@ -23,9 +26,9 @@ const VerifyOTPScreen = ({ route, navigation }) => {
   
     const verifyOtp = () => {
       const otpCode = otp.join('');
-      if (otpCode === token) {
-        Alert.alert('Éxito', 'Código OTP verificado correctamente.');
-        navigation.navigate('ResetPasswordScreen'); // Navega a la pantalla de restablecimiento de contraseña
+      console.log('Código ingresado por el usuario:', otpCode);
+      if (String(otpCode) === String(OTPtoken)) {
+        navigation.navigate('ResetPasswordScreen', {email});
       } else {
         Alert.alert('Error', 'Código OTP incorrecto. Intente de nuevo.');
       }

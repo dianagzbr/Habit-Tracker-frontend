@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
+import axios from 'axios';
 
 const SignUpScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -12,6 +13,10 @@ const SignUpScreen = ({ navigation }) => {
   const validateForm = () => {
     if (!name.trim()) {
       Alert.alert('Validation Error', 'Name is required.');
+      return false;
+    }
+    if(name.includes(' ')) {
+      Alert.alert('Validation Error', 'Spaces are not allowed in the name. Please use underscores (_) instead.');
       return false;
     }
     if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -29,27 +34,57 @@ const SignUpScreen = ({ navigation }) => {
     return true;
   };
 
-  const handlePasswordRecovery = () => {
+  const handlePasswordRecovery = async () => {
     if (validateForm()) {
-      // Generación de un token aleatorio de 5 dígitos
-      const token = Math.floor(10000 + Math.random() * 90000).toString();
+      try {
+        const checkResponse = await axios.post('http://192.168.1.143:8000/api/checkdata/', {
+          username: name,
+          email: email,
+        });
 
-      // Lógica para simular el envío del token por correo (en producción, aquí se llamaría a un servicio)
-      console.log("Token enviado a:", email, "Token:", token);
+        if (checkResponse.status === 200) {
+          const sendCodeResponse = await axios.post('http://192.168.1.143:8000/api/send-code/', { 
+            email
+          });
 
-      // Navega a la pantalla de verificación y envía el token como parámetro
-      navigation.navigate('VerifyEmailScreen', { token });
+          if (sendCodeResponse.status === 200) {
+            const { message } = sendCodeResponse.data;
+            console.log(message);
+            console.log('Respuesta del backend:', sendCodeResponse.data);
+
+            Alert.alert(
+              "Valid data", "Check your emai");
+            // Navega a la pantalla de verificación
+            navigation.navigate('VerifyEmailScreen', { 
+              OTPtoken: sendCodeResponse.data.code,
+              userData: { name, email, password }
+            });
+          } else {
+            alert('Hubo un problema al enviar el código OTP. Inténtalo de nuevo.');
+          }
+        } else {
+          alert('El correo o el nombre de usuario no están registrados.');
+        }
+      } catch (error) {
+        if (error.response) {
+          const { status } = error.response;
+
+          if (status === 400) {
+            Alert.alert('Error', 'The email or username is already registered.');
+          }  else {
+            Alert.alert('Error', `Unexpected error: ${status}`);
+          }
+        } else if (error.request) {
+          console.error('Network error:', error.request);
+          Alert.alert('Error', 'Could not connect to the server. Please check your Internet connection.');
+        } else {
+          console.error('Error:', error.message);
+          Alert.alert('Error', 'An unexpected error occurred.');
+        }
+      }
     }
-  };
+};
 
-/*
-  const handleSignUp = () => {
-    if (validateForm()) {
-      // Proceed with sign-up logic
-      Alert.alert('Success', 'Form is valid! Proceeding with sign-up...');
-    }
-  };
-*/
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign Up</Text>
@@ -93,12 +128,6 @@ const SignUpScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </LinearGradient>
-
-      <Text style={styles.orText}>Or sign up with:</Text>
-
-      <TouchableOpacity style={styles.googleButton}>
-        <AntDesign name="google" size={24} color="black" />
-      </TouchableOpacity>
     </View>
   );
 };

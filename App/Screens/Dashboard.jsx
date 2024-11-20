@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 
 const HomeScreen = ({ navigation }) => {
+  //const { userId } = route.params;const { userId } = route.params;
   const [habits, setHabits] = useState([
     { id: 1, name: 'Meditating', completed: true },
     { id: 2, name: 'Read Philosophy', completed: true },

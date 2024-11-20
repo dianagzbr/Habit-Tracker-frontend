@@ -1,34 +1,59 @@
 //verifyEmail
 import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert} from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
+import axios from 'axios';
 
 const VerifyEmailScreen = ({ route, navigation }) => {
-    const { token } = route.params; // Obtenemos el token desde los parámetros de navegación
-    const [otp, setOtp] = useState(['', '', '', '', '']); // Arreglo para cada dígito del OTP
-    const inputRefs = useRef([]); // Creamos las referencias para cada campo de OTP
-  
-    // Maneja el cambio de cada dígito del OTP
+    const { OTPtoken, userData } = route.params; 
+    const [otp, setOtp] = useState(['', '', '', '', '']); 
+    const inputRefs = useRef([]);
+
+    console.log('Token recibidooo:', OTPtoken);
+
     const handleChange = (text, index) => {
-      if (/^\d*$/.test(text)) { // Solo permite números
+      if (/^\d*$/.test(text)) { 
         const newOtp = [...otp];
         newOtp[index] = text;
         setOtp(newOtp);
-  
-        // Enfoca automáticamente el siguiente campo si el usuario ingresó un número
+ 
         if (text && index < 4) {
           inputRefs.current[index + 1].focus();
         }
       }
     };
-  
-    const verifyOtp = () => {
+
+    const verifyOtp = async () => {
       const otpCode = otp.join('');
-      if (otpCode === token) {
-        Alert.alert('Éxito', 'El Usuario se ha Registrado con exito.');
-        navigation.navigate('HomeScreen'); // Navega a la pantalla de restablecimiento de contraseña
+      console.log('Código ingresado por el usuario:', otpCode);
+  
+      if (String(otpCode) === String(OTPtoken)) {
+        try {
+          const response = await axios.post('http://192.168.1.143:8000/api/register', {
+            username: userData.name,
+            email: userData.email,
+            password: userData.password,
+          });
+  
+          if (response.status === 201) {
+            const { token, user } = response.data;
+
+            await AsyncStorage.setItem("authToken", token);
+            console.log("Token guardado:", token);
+
+            Alert.alert("Registro exitoso", `Bienvenido, ${user.username}!`);
+            const userId = response.data.id
+            navigation.navigate('HomeScreen', {userId});
+          } else {
+            Alert.alert('Error', 'Hubo un error en el registro. Inténtalo nuevamente.');
+          }
+        } catch (error) {
+          console.error('Error al registrar al usuario:', error.response?.data || error.message);
+          Alert.alert('Error', 'Hubo un error en el registro. Verifica los datos e inténtalo de nuevo.');
+        }
       } else {
-        Alert.alert('Error', 'Código OTP incorrecto. Intente de nuevo.');
+        Alert.alert('Error', 'Código OTP incorrecto. Intenta de nuevo.');
       }
     };
 

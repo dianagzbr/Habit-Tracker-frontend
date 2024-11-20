@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
+import axios from 'axios';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
 
   const validateForm = () => {
     if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -19,13 +22,46 @@ const LoginScreen = ({ navigation }) => {
     return true;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (validateForm()) {
-      // Proceed with login logic
-      Alert.alert('Success', 'Form is valid! Proceeding with login...');
-      navigation.navigate('HomeScreen');  // Navegar a la HomeScreen si es válido
+      try {
+        const response = await axios.post('http://192.168.1.143:8000/api/login/', {
+          email: email,
+          password: password,
+        });
+
+        const { token, user } = response.data;
+
+        if (response.status === 200) {
+
+          await AsyncStorage.setItem('authToken', token);
+          console.log('Token saved:', token);
+  
+          Alert.alert('Login succesfull', `Welcome, ${user.username}!`);
+          navigation.navigate('HomeScreen', { userId: user.id });
+        }
+      } catch (error) {
+        if (error.response) {
+          const { status } = error.response;
+
+          if (status === 404) {
+            Alert.alert('Error', 'The email is not registered.');
+          } else if (status === 400) {
+            Alert.alert('Error', 'The password is incorrect.');
+          } else {
+            Alert.alert('Error', `Unexpected error: ${status}`);
+          }
+        } else if (error.request) {
+          console.error('Network error:', error.request);
+          Alert.alert('Error', 'Could not connect to the server. Please check your Internet connection.');
+        } else {
+          console.error('Error:', error.message);
+          Alert.alert('Error', 'An unexpected error occurred.');
+        }
+      }
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -67,11 +103,6 @@ const LoginScreen = ({ navigation }) => {
         </TouchableOpacity>
       </LinearGradient>
 
-      <Text style={styles.orText}>Or log in with:</Text>
-
-      <TouchableOpacity style={styles.googleButton}>
-        <AntDesign name="google" size={24} color="black" />
-      </TouchableOpacity>
     </View>
   );
 };

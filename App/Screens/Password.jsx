@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import axios from 'axios';
 
 const PasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -13,17 +14,27 @@ const PasswordScreen = ({ navigation }) => {
     return true;
   };
 
-  const handlePasswordRecovery = () => {
+  const handlePasswordRecovery = async () => {
     if (validateEmail()) {
-      // Generación de un token aleatorio de 5 dígitos
-      //const token = Math.floor(10000 + Math.random() * 90000).toString();
-      const token = '12345';
+      try {
+        const url = 'http://192.168.1.143:8000/api/send-code/';
+        const response = await axios.post(url, { email });
 
-      // Lógica para simular el envío del token por correo (en producción, aquí se llamaría a un servicio)
-      console.log("Token enviado a:", email, "Token:", token);
-
-      // Navega a la pantalla de verificación y envía el token como parámetro
-      navigation.navigate('VerifyOTPScreen', { token });
+        if (response.status === 200) {
+          Alert.alert('E-mail valid', 'Check your email for the verification code.');
+          navigation.navigate('VerifyOTPScreen', { 
+            OTPtoken: response.data.code,
+            email
+           });
+        }
+      } catch (error) {
+        if (error.response?.status === 404) {
+          Alert.alert('Error', 'The email is not registered.');
+        } else {
+          Alert.alert('Error', 'There was an error. Please try again.');
+          console.error(error.response?.data || error.message);
+        }
+      }
     }
   };
 
