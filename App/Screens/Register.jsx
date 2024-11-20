@@ -1,34 +1,43 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
+import CustomModal from '../Components/CustomModal';
 import axios from 'axios';
+
 
 const SignUpScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const validateForm = () => {
     if (!name.trim()) {
-      Alert.alert('Validation Error', 'Name is required.');
+      setModalMessage('El nombre es obligatorio.');
+      setModalVisible(true);
       return false;
     }
     if(name.includes(' ')) {
-      Alert.alert('Validation Error', 'Spaces are not allowed in the name. Please use underscores (_) instead.');
+      setModalMessage('No se permiten espacios en el nombre.Por favor, use guiones bajos (_) en su lugar.');
+      setModalVisible(true);
       return false;
     }
     if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      Alert.alert('Validation Error', 'Please enter a valid email address.');
+      setModalMessage('Por favor, ingrese una dirección de correo electrónico válida.');
+      setModalVisible(true);
       return false;
     }
     if (password.length < 8) {
-      Alert.alert('Validation Error', 'Password must be at least 8 characters long.');
+      setModalMessage('La contraseña debe tener al menos 8 caracteres.');
+      setModalVisible(true);
       return false;
     }
     if (password !== passwordConfirmation) {
-      Alert.alert('Validation Error', 'Passwords do not match.');
+      setModalMessage('Las contraseñas no coinciden.');
+      setModalVisible(true);
       return false;
     }
     return true;
@@ -52,68 +61,73 @@ const SignUpScreen = ({ navigation }) => {
             console.log(message);
             console.log('Respuesta del backend:', sendCodeResponse.data);
 
-            Alert.alert(
-              "Valid data", "Check your emai");
+            setModalMessage('Datos válidos. Revisa tu correo electrónico.');
+            setModalVisible(true);
             // Navega a la pantalla de verificación
             navigation.navigate('VerifyEmailScreen', { 
               OTPtoken: sendCodeResponse.data.code,
               userData: { name, email, password }
             });
           } else {
-            alert('Hubo un problema al enviar el código OTP. Inténtalo de nuevo.');
+            setModalMessage('Hubo un problema al enviar el código OTP. Inténtalo de nuevo.');
+            setModalVisible(true);
           }
         } else {
-          alert('El correo o el nombre de usuario no están registrados.');
+          setModalMessage('El correo o el nombre de usuario no están registrados.');
+          setModalVisible(true);
         }
       } catch (error) {
         if (error.response) {
           const { status } = error.response;
 
           if (status === 400) {
-            Alert.alert('Error', 'The email or username is already registered.');
+            setModalMessage('El correo electrónico o el nombre de usuario ya están registrados.');
           }  else {
-            Alert.alert('Error', `Unexpected error: ${status}`);
+            setModalMessage(`Error inesperado: ${status}`);
           }
         } else if (error.request) {
           console.error('Network error:', error.request);
-          Alert.alert('Error', 'Could not connect to the server. Please check your Internet connection.');
+          setModalMessage('No se pudo conectar al servidor. Por favor verifique su conexión a Internet.');
         } else {
           console.error('Error:', error.message);
-          Alert.alert('Error', 'An unexpected error occurred.');
+          setModalMessage('Ocurrió un error inesperado.');
         }
       }
+
+      setModalMessage('¡Formulario válido! Procediendo con el registro...');
+      setModalVisible(true);
     }
 };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
+      <Text style={styles.title}>Registrarse</Text>
       <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
-        <Text style={styles.loginText}>Log In</Text>
+        <Text style={styles.loginText}>Iniciar Sesión</Text>
       </TouchableOpacity>
 
       <TextInput
-        placeholder="Name"
+        placeholder="Nombre"
         style={styles.input}
         value={name}
         onChangeText={setName}
       />
       <TextInput
-        placeholder="Email"
+        placeholder="Correo Electrónico"
         style={styles.input}
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
       <TextInput
-        placeholder="Password"
+        placeholder="Contraseña"
         style={styles.input}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
       <TextInput
-        placeholder="Password Confirmation"
+        placeholder="Confirmar Contraseña"
         style={styles.input}
         secureTextEntry
         value={passwordConfirmation}
@@ -128,6 +142,12 @@ const SignUpScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </LinearGradient>
+
+      <CustomModal
+        visible={modalVisible}
+        message={modalMessage}
+        onClose={() => setModalVisible(false)}
+      />
     </View>
   );
 };

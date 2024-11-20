@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert} from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
+import CustomModal from '../Components/CustomModal';
 import axios from 'axios';
 
 const VerifyEmailScreen = ({ route, navigation }) => {
