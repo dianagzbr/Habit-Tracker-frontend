@@ -3,8 +3,14 @@ import { View, Text, TouchableOpacity, TextInput, StyleSheet, FlatList, Switch }
 import DateTimePicker from '@react-native-community/datetimepicker';
 import EmojiPicker from 'rn-emoji-keyboard';
 import CustomModal from '../Components/CustomModal';
+import { useRoute } from '@react-navigation/native';
+import axios from 'axios';
+import HomeScreen from './Home';
+import moment from 'moment';
 
-const AddHabitScreen = () => {
+const AddHabitScreen = ({ navigation }) => {
+  const route = useRoute();
+  const { userId } = route.params;
   const [habit, setHabit] = useState({
     nombre: '',
     emoji: '',
@@ -82,13 +88,41 @@ const AddHabitScreen = () => {
     return true;
   };
 
+
   const handleSaveHabit = () => {
     if (validateForm()) {
-      setModalMessage('¡Hábito guardado con éxito!');
-      setModalVisible(true);
-      // Lógica para guardar el hábito en el backend
+      const habitData = {
+        nombre: habit.nombre,
+        emoji: habit.emoji,
+        fecha_inicio: habit.fecha_inicio.toISOString().split('T')[0], // Formatear la fecha
+        fecha_fin: habit.fecha_fin ? habit.fecha_fin.toISOString().split('T')[0] : null,
+        rango_tiempo_inicio: moment(habit.rango_tiempo_inicio).format('HH:mm'),
+        rango_tiempo_fin: moment(habit.rango_tiempo_fin).format('HH:mm'),
+        recordatorio: habit.recordatorio,
+        recordatorio_hora: habit.recordatorio
+          ? habit.recordatorio_hora.toISOString().split('T')[1].slice(0, 5)
+          : null,
+        usuario: userId, // Define correctamente el usuario antes de usar la función
+      };
+  
+      axios.post('http://192.168.1.143:8000/api/habitos/', habitData, { },
+        )
+        .then((response) => {
+          setModalMessage('¡Hábito guardado con éxito!');
+          setModalVisible(true);
+          
+          navigation.navigate('HomeScreen');
+        })
+        .catch((error) => {
+          const errorMessage =
+            error.response?.data?.detail || 'Ocurrió un error al guardar el hábito.';
+          setModalMessage(`Error: ${errorMessage}`);
+          setModalVisible(true);
+        });
+        
     }
   };
+
 
   return (
     <FlatList

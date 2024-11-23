@@ -65,7 +65,7 @@ const LoginScreen = ({ navigation }) => {
           setModalMessage('Error: A ocurrido un error inesperado.');
         }
       }
-      navigation.navigate('HomeScreen');  
+      //navigation.navigate('HomeScreen');  
     }
   };
 

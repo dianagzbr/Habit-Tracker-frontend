@@ -1,54 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialIcons, AntDesign } from '@expo/vector-icons';
+import axios from 'axios';
 
 const HomeScreen = ({ navigation }) => {
-  //const { userId } = route.params;const { userId } = route.params;
-  const [habits, setHabits] = useState([
-    {
-      id: 1,
-      nombre: 'Meditating',
-      emoji: '🧘',
-      fecha_inicio: '01/11/2024',
-      fecha_fin: '30/11/2024',
-      dias_semana: 'Mon, Wed, Fri',
-      rango_tiempo_inicio: '08:00',
-      rango_tiempo_fin: '09:00',
-      recordatorio: true,
-      recordatorio_hora: '07:30',
-      usuario: 'Susy',
-      completed: true,
-    },
-    {
-      id: 2,
-      nombre: 'Read Philosophy',
-      emoji: '📚',
-      fecha_inicio: '01/11/2024',
-      fecha_fin: '30/11/2024',
-      dias_semana: 'Tue, Thu',
-      rango_tiempo_inicio: '20:00',
-      rango_tiempo_fin: '21:00',
-      recordatorio: false,
-      recordatorio_hora: null,
-      usuario: 'Susy',
-      completed: true,
-    },
-    {
-      id: 3,
-      nombre: 'Journaling',
-      emoji: '📝',
-      fecha_inicio: '01/11/2024',
-      fecha_fin: '30/11/2024',
-      dias_semana: 'Daily',
-      rango_tiempo_inicio: '21:00',
-      rango_tiempo_fin: '21:30',
-      recordatorio: true,
-      recordatorio_hora: '20:45',
-      usuario: 'Susy',
-      completed: false,
-    },
-  ]);
+  const [userId, setUserId] = useState(null); 
+  const [name, setName] = useState('');
+  const [habits, setHabits] = useState([]);
+  const [marked, setMarked] = useState([]);
   const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {//obtenemos la id del usuario de interes
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');  
+        if (!token) {
+          console.error('No se encontró el token de usuario');
+          return;
+        }
+        const response = await axios.post(
+          'http://192.168.1.143:8000/api/profile/',
+          {},
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          }
+        );
+        const { username, id } = response.data;
+        setName(username);
+        setUserId(id);
+      } catch (error) {
+        console.error('Error al obtener los datos del perfil:', error);
+        Alert.alert('Error', 'No se pudo cargar la información del perfil.');
+      }
+    }; 
+    fetchUserData();
+  }, [userId]);
 
   useEffect(() => {
     const date = new Date();
@@ -61,16 +50,63 @@ const HomeScreen = ({ navigation }) => {
     setCurrentDate(formattedDate);
   }, []);
 
-  const handleToggleHabit = (id) => {
-    setHabits((prevHabits) =>
-      prevHabits.map((habit) =>
-        habit.id === id ? { ...habit, completed: !habit.completed } : habit
-      )
-    );
-  };
+  useEffect(() => {//obtiene los datos de los regitros
+    const fetchHabits = async (userId) => {
+      try {
+        const response = await axios.get(
+          `http://192.168.1.143:8000/api/habitos/?userId=${userId}`
+        );
+        setHabits(response.data); // Actualiza el estado con los datos de la API
+        
+      } catch (error) {
+        console.error('Error al obtener los hábitos:', error);
+        alert('No se pudieron cargar los hábitos. Intenta nuevamente.');
+      }
+    };
+  
+    // Llama a la función pasándole el userId
+    if (userId) {
+      fetchHabits(userId);
+    }
+  }, [userId]); // Asegúrate de incluir userId como dependencia
+
+  useEffect(() => {
+    const fetchHabitsAndMarkCompleted = async () => {
+      try {
+        // Obtener la fecha actual
+        const date = new Date();
+        const formattedDate = date.toISOString().split('T')[0];
+  
+        // Obtener las ejecuciones del día actual para el usuario
+        const executionsResponse = await axios.get(
+          `http://192.168.1.143:8000/api/ejecuciones/?userId=${userId}&fecha=${formattedDate}`
+        );
+  
+        const executionData = executionsResponse.data || []; // Verifica que haya datos en la respuesta
+        setMarked(executionData); // Actualiza el estado de las ejecuciones
+  
+        // Combinar las ejecuciones con los hábitos para actualizar su estado
+        setHabits((prevHabits) =>
+          prevHabits.map((habit) => ({
+            ...habit,
+            completed: executionData.some(
+              (execution) => execution.habito === habit.id
+            ), // Marca como completado si la ejecución tiene el ID del hábito
+          }))
+        );
+      } catch (error) {
+        console.error('Error al obtener las ejecuciones:', error);
+        alert('No se pudieron cargar las ejecuciones. Intenta nuevamente.');
+      }
+    };
+  
+    if (userId) {
+      fetchHabitsAndMarkCompleted();
+    }
+  }, []);
 
   const handleAddHabit = () => {
-    navigation.navigate('AddHabit');
+    navigation.navigate('AddHabit', {userId});
   };
 
   const handleViewHabitDetails = (habit) => {
@@ -82,13 +118,44 @@ const HomeScreen = ({ navigation }) => {
     return habits.length ? Math.round((completedHabits / habits.length) * 100) : 0;
   };
 
+  const handleToggleHabit = async (habitId) => {
+    try {
+      // Generar la fecha actual en formato "yyyy-mm-dd"
+      const date = new Date();
+      const formattedDate = date.toISOString().split('T')[0]; // Extraer solo la parte de la fecha
+      
+      // Llamada a la API para marcar/desmarcar el hábito
+      const response = await axios.post(
+        'http://192.168.1.143:8000/api/ejecuciones/marcar_habito/',
+        {
+          habito: habitId, // ID del hábito a marcar/desmarcar
+          fecha: formattedDate, // Fecha actual
+        }
+      );
+      
+      console.log('Ejecución actualizada:', response.data);
+  
+      // Actualizar el estado local del hábito (completado o no)
+      setHabits((prevHabits) =>
+        prevHabits.map((habit) =>
+          habit.id === habitId ? { ...habit, completed: !habit.completed } : habit
+        )
+      );
+    } catch (error) {
+      console.error(
+        'Error al alternar el estado del hábito:',
+        error.response?.data || error.message
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
         ListHeaderComponent={
           <>
             <Text style={styles.dateText}>{currentDate}</Text>
-            <Text style={styles.greetingText}>Hola, <Text style={styles.usernameText}>Susy!</Text></Text>
+            <Text style={styles.greetingText}>Hola, <Text style={styles.usernameText}>{name || 'Cargando...'}</Text></Text>
 
             <TouchableOpacity onPress={() => navigation.navigate("ProgressScreen")}>
               <View style={styles.progressCard}>
@@ -107,6 +174,7 @@ const HomeScreen = ({ navigation }) => {
             </View>
           </>
         }
+
         data={habits}
         renderItem={({ item }) => (
           <View style={styles.habitItem}>
