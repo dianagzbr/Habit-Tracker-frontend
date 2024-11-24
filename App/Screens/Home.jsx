@@ -10,6 +10,20 @@ const HomeScreen = ({ navigation }) => {
   const [habits, setHabits] = useState([]);
   const [marked, setMarked] = useState([]);
   const [currentDate, setCurrentDate] = useState('');
+  const [authToken, setAuthToken] = useState(null);
+
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+        setAuthToken(token); // Guardamos el token en el estado
+      } catch (error) {
+        console.error('Error al obtener el token de AsyncStorage:', error);
+      }
+    };
+
+    fetchToken();
+  }, []);
 
   useEffect(() => {//obtenemos la id del usuario de interes
     const fetchUserData = async () => {
@@ -37,7 +51,7 @@ const HomeScreen = ({ navigation }) => {
       }
     }; 
     fetchUserData();
-  }, [userId]);
+  }, [authToken]);
 
   useEffect(() => {
     const date = new Date();
@@ -50,26 +64,6 @@ const HomeScreen = ({ navigation }) => {
     setCurrentDate(formattedDate);
   }, []);
 
-  useEffect(() => {//obtiene los datos de los regitros
-    const fetchHabits = async (userId) => {
-      try {
-        const response = await axios.get(
-          `http://192.168.1.143:8000/api/habitos/?userId=${userId}`
-        );
-        setHabits(response.data); // Actualiza el estado con los datos de la API
-        
-      } catch (error) {
-        console.error('Error al obtener los hábitos:', error);
-        alert('No se pudieron cargar los hábitos. Intenta nuevamente.');
-      }
-    };
-  
-    // Llama a la función pasándole el userId
-    if (userId) {
-      fetchHabits(userId);
-    }
-  }, [userId]); // Asegúrate de incluir userId como dependencia
-
   useEffect(() => {
     const fetchHabitsAndMarkCompleted = async () => {
       try {
@@ -77,40 +71,58 @@ const HomeScreen = ({ navigation }) => {
         const date = new Date();
         const formattedDate = date.toISOString().split('T')[0];
   
-        // Obtener las ejecuciones del día actual para el usuario
+        // Obtener hábitos del usuario
+        const habitsResponse = await axios.get(
+          `http://192.168.1.143:8000/api/habitos/?userId=${userId}`
+        );
+        const habitsData = habitsResponse.data || [];
+  
+        // Filtrar los hábitos para asegurarse de que la fecha de hoy esté en el rango de fecha_inicio y fecha_fin
+        const today = new Date();
+        const filteredHabits = habitsData.filter((habit) => {
+          const fechaInicio = new Date(habit.fecha_inicio);
+          const fechaFin = habit.fecha_fin ? new Date(habit.fecha_fin) : null;
+  
+          // Verifica si `today` está en el rango entre `fecha_inicio` y `fecha_fin`
+          return (
+            today >= fechaInicio && // Hoy es igual o posterior a la fecha de inicio
+            (fechaFin === null || today <= fechaFin) // Hoy es igual o anterior a la fecha de fin, si existe
+          );
+        });
+  
+        // Obtener ejecuciones del día actual para el usuario
         const executionsResponse = await axios.get(
           `http://192.168.1.143:8000/api/ejecuciones/?userId=${userId}&fecha=${formattedDate}`
         );
+        const executionData = executionsResponse.data || []; // Verifica que haya datos
   
-        const executionData = executionsResponse.data || []; // Verifica que haya datos en la respuesta
-        setMarked(executionData); // Actualiza el estado de las ejecuciones
+        // Actualizar hábitos con el estado completado según las ejecuciones
+        const updatedHabits = filteredHabits.map((habit) => ({
+          ...habit,
+          completed: executionData.some(
+            (execution) => execution.habito === habit.id
+          ), // Si hay ejecución, marcar como completado
+        }));
   
-        // Combinar las ejecuciones con los hábitos para actualizar su estado
-        setHabits((prevHabits) =>
-          prevHabits.map((habit) => ({
-            ...habit,
-            completed: executionData.some(
-              (execution) => execution.habito === habit.id
-            ), // Marca como completado si la ejecución tiene el ID del hábito
-          }))
-        );
+        // Actualizar el estado
+        setHabits(updatedHabits);
       } catch (error) {
-        console.error('Error al obtener las ejecuciones:', error);
-        alert('No se pudieron cargar las ejecuciones. Intenta nuevamente.');
+        console.error('Error al obtener los hábitos o ejecuciones:', error);
+        alert('No se pudieron cargar los datos. Intenta nuevamente.');
       }
     };
   
     if (userId) {
       fetchHabitsAndMarkCompleted();
     }
-  }, []);
+  }, [userId]);
 
   const handleAddHabit = () => {
     navigation.navigate('AddHabit', {userId});
   };
 
   const handleViewHabitDetails = (habit) => {
-    navigation.navigate('HabitDetail', { habit });
+    navigation.navigate('HabitDetail', { habit, userId });
   };
 
   const calculateProgress = () => {
@@ -118,35 +130,49 @@ const HomeScreen = ({ navigation }) => {
     return habits.length ? Math.round((completedHabits / habits.length) * 100) : 0;
   };
 
-  const handleToggleHabit = async (habitId) => {
+  const handleToggleHabit = async (habitId, completed) => {
+    if (completed) {
+      alert("Este hábito ya está completado y no se puede desmarcar.");
+      return;
+    }
+  
     try {
       // Generar la fecha actual en formato "yyyy-mm-dd"
       const date = new Date();
-      const formattedDate = date.toISOString().split('T')[0]; // Extraer solo la parte de la fecha
-      
-      // Llamada a la API para marcar/desmarcar el hábito
+      const formattedDate = date.toISOString().split("T")[0];
+  
+      // Llamar a la API para marcar el hábito como completado
       const response = await axios.post(
-        'http://192.168.1.143:8000/api/ejecuciones/marcar_habito/',
+        "http://192.168.1.143:8000/api/ejecuciones/marcar_habito/",
         {
-          habito: habitId, // ID del hábito a marcar/desmarcar
-          fecha: formattedDate, // Fecha actual
+          habito: habitId,
+          completado: true,
+          fecha: formattedDate,
         }
       );
-      
-      console.log('Ejecución actualizada:', response.data);
   
-      // Actualizar el estado local del hábito (completado o no)
+      console.log("Hábito completado:", response.data);
+  
+      // Actualizar el estado local para reflejar el cambio
       setHabits((prevHabits) =>
         prevHabits.map((habit) =>
-          habit.id === habitId ? { ...habit, completed: !habit.completed } : habit
+          habit.id === habitId ? { ...habit, completed: true } : habit
         )
       );
     } catch (error) {
       console.error(
-        'Error al alternar el estado del hábito:',
+        "Error al marcar el hábito como completado:",
         error.response?.data || error.message
       );
     }
+  };
+
+  const toggleHabitCompletion = (habitId) => {
+    setHabits((prevHabits) =>
+      prevHabits.map((habit) =>
+        habit.id === habitId ? { ...habit, completed: !habit.completed } : habit
+      )
+    );
   };
 
   return (
@@ -174,6 +200,7 @@ const HomeScreen = ({ navigation }) => {
             </View>
           </>
         }
+          
 
         data={habits}
         renderItem={({ item }) => (
@@ -181,7 +208,7 @@ const HomeScreen = ({ navigation }) => {
             <TouchableOpacity onPress={() => handleViewHabitDetails(item)} style={{ flex: 1 }}>
               <Text style={[styles.habitText, item.completed && styles.completedHabit]}>{item.emoji} {item.nombre}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleToggleHabit(item.id)}>
+            <TouchableOpacity onPress={() => handleToggleHabit(item.id, item.completed)}disabled={item.completed}>
               <MaterialIcons name={item.completed ? "check-box" : "check-box-outline-blank"} size={24} color="green" />
             </TouchableOpacity>
           </View>

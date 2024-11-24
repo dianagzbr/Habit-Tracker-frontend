@@ -7,7 +7,7 @@ import EmojiPicker from 'rn-emoji-keyboard';
 import CustomModal from '../Components/CustomModal';
 
 const EditHabitScreen = ({ route, navigation }) => {
-  const { habit } = route.params;
+  const { habit, userId } = route.params;
 
   const parseDate = (dateString) => {
     // Parsear la fecha en formato "dd/mm/aaaa"
@@ -58,12 +58,45 @@ const EditHabitScreen = ({ route, navigation }) => {
     }
     return true;
   };
-
+/*
   const handleSaveHabit = () => {
     if (validateForm()) {
       setModalMessage('¡Hábito actualizado con éxito!');
       setModalVisible(true);
       // Lógica para actualizar el hábito en el backend
+    }
+  };
+*/
+  const handleSaveHabit = () => {
+    if (validateForm()) {
+      const habitData = {
+        nombre: habit.nombre,
+        emoji: habit.emoji,
+        fecha_inicio: habit.fecha_inicio.toISOString().split('T')[0], // Formatear la fecha
+        fecha_fin: habit.fecha_fin ? habit.fecha_fin.toISOString().split('T')[0] : null,
+        rango_tiempo_inicio: moment(habit.rango_tiempo_inicio).format('HH:mm'),
+        rango_tiempo_fin: moment(habit.rango_tiempo_fin).format('HH:mm'),
+        recordatorio: habit.recordatorio,
+        recordatorio_hora: habit.recordatorio_hora,
+        usuario: userId, // Define correctamente el usuario antes de usar la función
+      };
+      
+  
+      axios.patch('http://192.168.1.143:8000/api/habitos/', habitData, { },
+        )
+        .then((response) => {
+          setModalMessage('¡Hábito modificado con éxito!');
+          setModalVisible(true);
+          
+          navigation.navigate('HomeScreen');
+        })
+        .catch((error) => {
+          const errorMessage =
+            error.response?.data?.detail || 'Ocurrió un error al guardar el hábito.';
+          setModalMessage(`Error: ${errorMessage}`);
+          setModalVisible(true);
+        });
+        
     }
   };
 

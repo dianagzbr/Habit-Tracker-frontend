@@ -1,11 +1,28 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import axios from 'axios';
 
 const HabitDetailScreen = ({ route, navigation }) => {
-  const { habit } = route.params;
+  const { habit, userId } = route.params;
 
   const handleEditHabit = () => {
-    navigation.navigate('EditHabit', {habit});
+    navigation.navigate('EditHabit', {habit, userId});
+  };
+
+  const handleDeleteHabit = async () => {
+    try {
+      const response = await axios.delete(
+        `http://192.168.1.143:8000/api/habitos/${habit.id}/`, // Asegúrate de que esta URL sea la correcta para eliminar el hábito
+        { }
+      );
+
+      if (response.status === 204) {
+        navigation.navigate('HomeScreen')
+      }
+    } catch (error) {
+      console.error('Error al eliminar el hábito:', error);
+      Alert.alert('Error', 'Hubo un problema al eliminar el hábito. Intenta nuevamente.');
+    }
   };
 
   return (
@@ -24,10 +41,7 @@ const HabitDetailScreen = ({ route, navigation }) => {
         <TouchableOpacity style={styles.editButton} onPress={handleEditHabit}>
           <Text style={styles.editButtonText}>Editar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => {
-          // handleDeleteHabit should be passed from navigation
-          navigation.goBack();
-        }}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteHabit}>
           <Text style={styles.deleteButtonText}>Eliminar</Text>
         </TouchableOpacity>
       </View>

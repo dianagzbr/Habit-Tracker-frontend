@@ -99,11 +99,10 @@ const AddHabitScreen = ({ navigation }) => {
         rango_tiempo_inicio: moment(habit.rango_tiempo_inicio).format('HH:mm'),
         rango_tiempo_fin: moment(habit.rango_tiempo_fin).format('HH:mm'),
         recordatorio: habit.recordatorio,
-        recordatorio_hora: habit.recordatorio
-          ? habit.recordatorio_hora.toISOString().split('T')[1].slice(0, 5)
-          : null,
+        recordatorio_hora: habit.recordatorio_hora,
         usuario: userId, // Define correctamente el usuario antes de usar la función
       };
+      
   
       axios.post('http://192.168.1.143:8000/api/habitos/', habitData, { },
         )
