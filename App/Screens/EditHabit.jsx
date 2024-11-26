@@ -1,112 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { AntDesign } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, FlatList, Switch } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import EmojiPicker from 'rn-emoji-keyboard';
 import CustomModal from '../Components/CustomModal';
+import { useRoute } from '@react-navigation/native';
+import axios from 'axios';
+import HomeScreen from './Home';
+import moment from 'moment';
 
-const EditHabitScreen = ({ route, navigation }) => {
-  const { habit, userId } = route.params;
+const AddHabitScreen = ({ route, navigation }) => {
+  const { userId, habit } = route.params;
 
-  const parseDate = (dateString) => {
-    // Parsear la fecha en formato "dd/mm/aaaa"
-    const [day, month, year] = dateString.split('/');
-    return new Date(year, month - 1, day);
-  };
-
-  // Inicializar el estado con la fecha convertida si está en formato "dd/mm/aaaa"
-  const [habitName, setHabitName] = useState(habit.nombre || '');
-  const [emoji, setEmoji] = useState(habit.emoji || '');
-  const [startDate, setStartDate] = useState(habit.fecha_inicio ? parseDate(habit.fecha_inicio) : new Date());
-  const [endDate, setEndDate] = useState(habit.fecha_fin ? parseDate(habit.fecha_fin) : null);
-  const [startTime, setStartTime] = useState(habit.rango_tiempo_inicio ? new Date(`1970-01-01T${habit.rango_tiempo_inicio}:00`) : new Date());
-  const [endTime, setEndTime] = useState(habit.rango_tiempo_fin ? new Date(`1970-01-01T${habit.rango_tiempo_fin}:00`) : new Date());
-  const [reminder, setReminder] = useState(habit.recordatorio || false);
-  const [reminderTime, setReminderTime] = useState(habit.recordatorio_hora ? new Date(`1970-01-01T${habit.recordatorio_hora}:00`) : new Date());
+  const [newhabit, setHabit] = useState({
+    ...habit,
+    fecha_inicio: new Date(habit.fecha_inicio), // Convertir si es necesario
+    fecha_fin: habit.fecha_fin ? new Date(habit.fecha_fin) : null,
+    rango_tiempo_inicio: new Date(`1970-01-01T${habit.rango_tiempo_inicio}`),
+    rango_tiempo_fin: new Date(`1970-01-01T${habit.rango_tiempo_fin}`),
+    recordatorio_hora: new Date(`1970-01-01T${habit.recordatorio_hora}`),
+  });
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [showReminderTimePicker, setShowReminderTimePicker] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
-  useEffect(() => {
-    // Asegurar que las fechas sean válidas después de la carga
-    if (!endDate) {
-      setEndDate(new Date()); // Establecer una fecha de fin por defecto si no hay una
-    }
-  }, []);
-
-  const validateForm = () => {
-    if (!habitName.trim()) {
-      setModalMessage('El nombre del hábito es obligatorio.');
-      setModalVisible(true);
-      return false;
-    }
-    if (!startDate || !endDate) {
-      setModalMessage('La fecha de inicio y la fecha de fin son obligatorias.');
-      setModalVisible(true);
-      return false;
-    }
-    if (startDate > endDate) {
-      setModalMessage('La fecha de fin debe ser posterior a la de inicio.');
-      setModalVisible(true);
-      return false;
-    }
-    return true;
-  };
-/*
-  const handleSaveHabit = () => {
-    if (validateForm()) {
-      setModalMessage('¡Hábito actualizado con éxito!');
-      setModalVisible(true);
-      // Lógica para actualizar el hábito en el backend
-    }
-  };
-*/
-  const handleSaveHabit = () => {
-    if (validateForm()) {
-      const habitData = {
-        nombre: habit.nombre,
-        emoji: habit.emoji,
-        fecha_inicio: habit.fecha_inicio.toISOString().split('T')[0], // Formatear la fecha
-        fecha_fin: habit.fecha_fin ? habit.fecha_fin.toISOString().split('T')[0] : null,
-        rango_tiempo_inicio: moment(habit.rango_tiempo_inicio).format('HH:mm'),
-        rango_tiempo_fin: moment(habit.rango_tiempo_fin).format('HH:mm'),
-        recordatorio: habit.recordatorio,
-        recordatorio_hora: habit.recordatorio_hora,
-        usuario: userId, // Define correctamente el usuario antes de usar la función
-      };
-      
-  
-      axios.patch('http://192.168.1.143:8000/api/habitos/', habitData, { },
-        )
-        .then((response) => {
-          setModalMessage('¡Hábito modificado con éxito!');
-          setModalVisible(true);
-          
-          navigation.navigate('HomeScreen');
-        })
-        .catch((error) => {
-          const errorMessage =
-            error.response?.data?.detail || 'Ocurrió un error al guardar el hábito.';
-          setModalMessage(`Error: ${errorMessage}`);
-          setModalVisible(true);
-        });
-        
-    }
+  const handleInputChange = (field, value) => {
+    setHabit({ ...newhabit, [field]: value });
   };
 
-  const handleEmojiSelected = (e) => {
-    setEmoji(e.emoji);
-    setShowEmojiPicker(false);
+  const handleDateChange = (event, selectedDate, field) => {
+    if (selectedDate) {
+      handleInputChange(field, selectedDate);
+    }
+    setShowStartDatePicker(false);
+    setShowEndDatePicker(false);
+    setShowStartTimePicker(false);
+    setShowEndTimePicker(false);
+    setShowReminderTimePicker(false);
   };
 
   const formatDate = (date) => {
-    if (!date) return '';
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
@@ -114,142 +51,192 @@ const EditHabitScreen = ({ route, navigation }) => {
   };
 
   const formatTime = (time) => {
-    if (!time || isNaN(time.getTime())) return '';
     const hours = String(time.getHours()).padStart(2, '0');
     const minutes = String(time.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
   };
 
+  const validateForm = () => {
+    if (!newhabit.nombre.trim()) {
+      setModalMessage('El nombre del hábito es obligatorio.');
+      setModalVisible(true);
+      return false;
+    }
+    if (!newhabit.fecha_inicio) {
+      setModalMessage('La fecha de inicio es obligatoria.');
+      setModalVisible(true);
+      return false;
+    }
+    if (!newhabit.fecha_fin) {
+      setModalMessage('La fecha de fin es obligatoria.');
+      setModalVisible(true);
+      return false;
+    }
+    if (!newhabit.rango_tiempo_inicio || !habit.rango_tiempo_fin) {
+      setModalMessage('El rango de tiempo de inicio y fin son obligatorios.');
+      setModalVisible(true);
+      return false;
+    }
+    if (newhabit.fecha_fin < habit.fecha_inicio) {
+      setModalMessage('La fecha de fin no puede ser anterior a la fecha de inicio.');
+      setModalVisible(true);
+      return false;
+    }
+    return true;
+  };
+      
+  
+  const handleSaveHabit = () => {
+    if (validateForm()) {
+      const habitData = {
+        nombre: newhabit.nombre,
+        emoji: newhabit.emoji,
+        fecha_inicio: newhabit.fecha_inicio.toISOString().split('T')[0],
+        fecha_fin: newhabit.fecha_fin
+          ? newhabit.fecha_fin.toISOString().split('T')[0]
+          : null,
+        rango_tiempo_inicio: moment(newhabit.rango_tiempo_inicio).format('HH:mm'),
+        rango_tiempo_fin: moment(newhabit.rango_tiempo_fin).format('HH:mm'),
+        recordatorio: newhabit.recordatorio,
+        recordatorio_hora: moment(newhabit.recordatorio_hora).format('HH:mm'),
+        usuario: userId,
+      };
+
+      // Cambiar de POST a PUT o PATCH para actualizar
+      axios
+        .put(`http://192.168.1.143:8000/api/habitos/${habit.id}/`, habitData)
+        .then((response) => {
+          setModalMessage('¡Hábito actualizado con éxito!');
+          setModalVisible(true);
+
+          navigation.navigate('HomeScreen');
+        })
+        .catch((error) => {
+          const errorMessage =
+            error.response?.data?.detail || 'Ocurrió un error al actualizar el hábito.';
+          setModalMessage(`Error: ${errorMessage}`);
+          setModalVisible(true);
+        });
+    }
+  };
+
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Editar Hábito</Text>
+    <FlatList
+      data={[{ key: 'habitForm' }]}
+      renderItem={() => (
+        <View style={styles.container}>
+          <Text style={styles.title}>Editar habito</Text>
 
-      <Text style={styles.label}>Nombre del Hábito</Text>
-      <TextInput
-        placeholder="Nombre del Hábito"
-        style={styles.input}
-        value={habitName}
-        onChangeText={setHabitName}
-      />
+          <Text style={styles.label}>Nombre del Hábito</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre del Hábito"
+            value={newhabit.nombre}
+            onChangeText={(value) => handleInputChange('nombre', value)}
+          />
 
-      <Text style={styles.label}>Emoji</Text>
-      <TouchableOpacity onPress={() => setShowEmojiPicker(true)} style={styles.input}>
-        <Text>{emoji ? emoji : 'Seleccionar un Emoji'}</Text>
-      </TouchableOpacity>
-      {showEmojiPicker && (
-        <EmojiPicker 
-          onEmojiSelected={handleEmojiSelected} 
-          onClose={() => setShowEmojiPicker(false)}
-          open={showEmojiPicker}
-        />
-      )}
-
-      <Text style={styles.label}>Fecha de Inicio</Text>
-      <TouchableOpacity onPress={() => setShowStartDatePicker(true)} style={styles.input}>
-        <Text>{startDate ? formatDate(startDate) : 'Seleccionar Fecha'}</Text>
-      </TouchableOpacity>
-      {showStartDatePicker && (
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowStartDatePicker(false);
-            if (selectedDate) setStartDate(selectedDate);
-          }}
-        />
-      )}
-
-      <Text style={styles.label}>Fecha de Fin</Text>
-      <TouchableOpacity onPress={() => setShowEndDatePicker(true)} style={styles.input}>
-        <Text>{endDate ? formatDate(endDate) : 'Seleccionar Fecha'}</Text>
-      </TouchableOpacity>
-      {showEndDatePicker && (
-        <DateTimePicker
-          value={endDate || startDate}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowEndDatePicker(false);
-            if (selectedDate) setEndDate(selectedDate);
-          }}
-        />
-      )}
-
-      <Text style={styles.label}>Hora de Inicio</Text>
-      <TouchableOpacity onPress={() => setShowStartTimePicker(true)} style={styles.input}>
-        <Text>{formatTime(startTime)}</Text>
-      </TouchableOpacity>
-      {showStartTimePicker && (
-        <DateTimePicker
-          value={startTime}
-          mode="time"
-          display="default"
-          onChange={(event, selectedTime) => {
-            setShowStartTimePicker(false);
-            if (selectedTime) setStartTime(selectedTime);
-          }}
-        />
-      )}
-
-      <Text style={styles.label}>Hora de Fin</Text>
-      <TouchableOpacity onPress={() => setShowEndTimePicker(true)} style={styles.input}>
-        <Text>{formatTime(endTime)}</Text>
-      </TouchableOpacity>
-      {showEndTimePicker && (
-        <DateTimePicker
-          value={endTime}
-          mode="time"
-          display="default"
-          onChange={(event, selectedTime) => {
-            setShowEndTimePicker(false);
-            if (selectedTime) setEndTime(selectedTime);
-          }}
-        />
-      )}
-
-      <View style={styles.reminderContainer}>
-        <Text style={styles.label}>Recordatorio</Text>
-        <TouchableOpacity onPress={() => setReminder(!reminder)}>
-          <AntDesign name={reminder ? 'checksquare' : 'checksquareo'} size={24} color="#FF742B" />
-        </TouchableOpacity>
-      </View>
-
-      {reminder && (
-        <>
-          <Text style={styles.label}>Hora del Recordatorio</Text>
-          <TouchableOpacity onPress={() => setShowReminderTimePicker(true)} style={styles.input}>
-            <Text>{formatTime(reminderTime)}</Text>
+          <Text style={styles.label}>Emoji</Text>
+          <TouchableOpacity style={styles.input} onPress={() => setIsEmojiPickerOpen(true)}>
+            <Text>{habit.emoji ? habit.emoji : 'Selecciona un Emoji'}</Text>
           </TouchableOpacity>
-          {showReminderTimePicker && (
+          <EmojiPicker
+            onEmojiSelected={(emoji) => handleInputChange('emoji', emoji.emoji)}
+            open={isEmojiPickerOpen}
+            onClose={() => setIsEmojiPickerOpen(false)}
+          />
+
+          <Text style={styles.label}>Fecha de Inicio</Text>
+          <TouchableOpacity style={styles.input} onPress={() => setShowStartDatePicker(true)}>
+            <Text>{`Fecha de Inicio: ${formatDate(newhabit.fecha_inicio)}`}</Text>
+          </TouchableOpacity>
+          {showStartDatePicker && (
             <DateTimePicker
-              value={reminderTime}
-              mode="time"
+              value={habit.fecha_inicio}
+              mode="date"
               display="default"
-              onChange={(event, selectedTime) => {
-                setShowReminderTimePicker(false);
-                if (selectedTime) setReminderTime(selectedTime);
-              }}
+              minimumDate={new Date()}
+              onChange={(event, date) => handleDateChange(event, date, 'fecha_inicio')}
             />
           )}
-        </>
+
+          <Text style={styles.label}>Fecha de Fin</Text>
+          <TouchableOpacity style={styles.input} onPress={() => setShowEndDatePicker(true)}>
+            <Text>{habit.fecha_fin ? `Fecha de Fin: ${formatDate(newhabit.fecha_fin)}` : 'Selecciona una Fecha'}</Text>
+          </TouchableOpacity>
+          {showEndDatePicker && (
+            <DateTimePicker
+              value={habit.fecha_fin || habit.fecha_inicio}
+              mode="date"
+              display="default"
+              minimumDate={habit.fecha_inicio}
+              onChange={(event, date) => handleDateChange(event, date, 'fecha_fin')}
+            />
+          )}
+
+          <Text style={styles.label}>Hora de Inicio</Text>
+          <TouchableOpacity style={styles.input} onPress={() => setShowStartTimePicker(true)}>
+            <Text>{`Hora de Inicio: ${formatTime(newhabit.rango_tiempo_inicio)}`}</Text>
+          </TouchableOpacity>
+          {showStartTimePicker && (
+            <DateTimePicker
+              value={habit.rango_tiempo_inicio}
+              mode="time"
+              display="default"
+              onChange={(event, date) => handleDateChange(event, date, 'rango_tiempo_inicio')}
+            />
+          )}
+
+          <Text style={styles.label}>Hora de Fin</Text>
+          <TouchableOpacity style={styles.input} onPress={() => setShowEndTimePicker(true)}>
+            <Text>{`Hora de Fin: ${formatTime(newhabit.rango_tiempo_fin)}`}</Text>
+          </TouchableOpacity>
+          {showEndTimePicker && (
+            <DateTimePicker
+              value={habit.rango_tiempo_fin}
+              mode="time"
+              display="default"
+              onChange={(event, date) => handleDateChange(event, date, 'rango_tiempo_fin')}
+            />
+          )}
+
+          <View style={styles.switchContainer}>
+            <Text style={{fontSize: 16, fontWeight:'600'}}>Recordatorio</Text>
+            <Switch
+              value={habit.recordatorio}
+              onValueChange={(value) => handleInputChange('recordatorio', value)}
+            />
+          </View>
+
+          {habit.recordatorio && (
+            <>
+              <TouchableOpacity style={styles.input} onPress={() => setShowReminderTimePicker(true)}>
+                <Text>{`Hora de Recordatorio: ${formatTime(newhabit.recordatorio_hora)}`}</Text>
+              </TouchableOpacity>
+              {showReminderTimePicker && (
+                <DateTimePicker
+                  value={newhabit.recordatorio_hora}
+                  mode="time"
+                  display="default"
+                  onChange={(event, date) => handleDateChange(event, date, 'recordatorio_hora')}
+                />
+              )}
+            </>
+          )}
+
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveHabit}>
+            <Text style={styles.saveButtonText}>Guardar Hábito</Text>
+          </TouchableOpacity>
+
+          <CustomModal
+            visible={modalVisible}
+            message={modalMessage}
+            onClose={() => setModalVisible(false)}
+          />
+        </View>
       )}
-
-      <LinearGradient
-        colors={['#FF742B', '#FF8C48']}
-        style={styles.button}
-      >
-        <TouchableOpacity onPress={handleSaveHabit}>
-          <Text style={styles.buttonText}>Actualizar Hábito</Text>
-        </TouchableOpacity>
-      </LinearGradient>
-
-      <CustomModal
-        visible={modalVisible}
-        message={modalMessage}
-        onClose={() => setModalVisible(false)}
-      />
-    </View>
+      keyExtractor={(item) => item.key}
+    />
   );
 };
 
@@ -257,14 +244,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
+    padding: 20,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    alignSelf: 'flex-start',
     marginBottom: 20,
   },
   label: {
@@ -274,37 +258,33 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
-    width: '100%',
-    height: 50,
     backgroundColor: 'white',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 15,
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
     elevation: 2,
-    justifyContent: 'center',
   },
-  reminderContainer: {
+  switchContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
   },
-  button: {
-    width: '100%',
-    height: 50,
-    borderRadius: 8,
+  saveButton: {
+    backgroundColor: '#FF742B',
+    borderRadius: 10,
+    padding: 15,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 20,
   },
-  buttonText: {
+  saveButtonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
   },
 });
 
-export default EditHabitScreen;
+export default AddHabitScreen;

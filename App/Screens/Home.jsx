@@ -193,7 +193,7 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.habitListContainer}>
               <View style={styles.habitListHeader}>
                 <Text style={styles.habitListTitle}>Hábitos del Día</Text>
-                <TouchableOpacity onPress={() => navigation.navigate("HabitHistory")}>
+                <TouchableOpacity onPress={() => navigation.navigate('HabitHistory', {userId})}>
                   <Text style={styles.seeAllText}>Ver todos</Text>
                 </TouchableOpacity>
               </View>

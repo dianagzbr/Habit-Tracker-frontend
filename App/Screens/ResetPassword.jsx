@@ -25,7 +25,7 @@ const ResetPasswordScreen = ({ route, navigation }) => {
   const handlePasswordReset = async () => {
     if (validateForm()) {
       try {
-        const response = await axios.post('http://192.168.1.143:8000/api/resetpassword', {
+        const response = await axios.post('http://192.168.1.143:8000/api/resetpassword/', {
           email: email,
           password: newPassword,
         });

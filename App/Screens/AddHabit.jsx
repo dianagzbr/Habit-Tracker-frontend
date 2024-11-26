@@ -11,6 +11,7 @@ import moment from 'moment';
 const AddHabitScreen = ({ navigation }) => {
   const route = useRoute();
   const { userId } = route.params;
+
   const [habit, setHabit] = useState({
     nombre: '',
     emoji: '',
@@ -99,17 +100,15 @@ const AddHabitScreen = ({ navigation }) => {
         rango_tiempo_inicio: moment(habit.rango_tiempo_inicio).format('HH:mm'),
         rango_tiempo_fin: moment(habit.rango_tiempo_fin).format('HH:mm'),
         recordatorio: habit.recordatorio,
-        recordatorio_hora: habit.recordatorio_hora,
+        recordatorio_hora: moment(habit.recordatorio_hora).format('HH:mm'),
         usuario: userId, // Define correctamente el usuario antes de usar la función
       };
-      
   
       axios.post('http://192.168.1.143:8000/api/habitos/', habitData, { },
         )
         .then((response) => {
           setModalMessage('¡Hábito guardado con éxito!');
           setModalVisible(true);
-          
           navigation.navigate('HomeScreen');
         })
         .catch((error) => {
@@ -203,7 +202,7 @@ const AddHabitScreen = ({ navigation }) => {
           )}
 
           <View style={styles.switchContainer}>
-            <Text style={{fontSize: 16, fontWeight:'600'}}>Recordatorio</Text>
+            <Text style={{fontSize: 16, fontWeight: '600'}}>Recordatorio</Text>
             <Switch
               value={habit.recordatorio}
               onValueChange={(value) => handleInputChange('recordatorio', value)}
@@ -217,7 +216,7 @@ const AddHabitScreen = ({ navigation }) => {
               </TouchableOpacity>
               {showReminderTimePicker && (
                 <DateTimePicker
-                  value={habit.recordatorio_hora}
+                  value={habit.recordatorio_hora || new Date()}  // Asegúrate de usar un valor válido por defecto
                   mode="time"
                   display="default"
                   onChange={(event, date) => handleDateChange(event, date, 'recordatorio_hora')}

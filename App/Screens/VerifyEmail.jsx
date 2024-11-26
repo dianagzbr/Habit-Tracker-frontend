@@ -1,6 +1,6 @@
 //verifyEmail
 import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, } from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
 import CustomModal from '../Components/CustomModal';
@@ -31,7 +31,7 @@ const VerifyEmailScreen = ({ route, navigation }) => {
   
       if (String(otpCode) === String(OTPtoken)) {
         try {
-          const response = await axios.post('http://192.168.1.143:8000/api/register', {
+          const response = await axios.post('http://192.168.1.143:8000/api/register/', {
             username: userData.name,
             email: userData.email,
             password: userData.password,

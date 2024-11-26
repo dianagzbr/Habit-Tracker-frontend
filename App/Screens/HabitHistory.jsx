@@ -1,48 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import axios from 'axios';
 
-const HabitHistoryScreen = ({ route, navigation }) => {
-  const [habits, setHabits] = useState([
-    {
-        id: 1,
-        nombre: 'Meditating',
-        emoji: '🧘',
-        fecha_inicio: '2023-11-01',
-        fecha_fin: '2023-11-30',
-        dias_semana: 'Mon, Wed, Fri',
-        rango_tiempo_inicio: '08:00',
-        rango_tiempo_fin: '09:00',
-        recordatorio: true,
-        recordatorio_hora: '07:30',
-        completed: true,
-      },
-      {
-        id: 2,
-        nombre: 'Read Philosophy',
-        emoji: '📖',
-        fecha_inicio: '2023-11-01',
-        fecha_fin: '2023-11-30',
-        dias_semana: 'Tue, Thu',
-        rango_tiempo_inicio: '20:00',
-        rango_tiempo_fin: '21:00',
-        recordatorio: false,
-        recordatorio_hora: null,
-        completed: false,
-      },
-      {
-        id: 3,
-        nombre: 'Journaling',
-        emoji: '📓',
-        fecha_inicio: '2023-11-01',
-        fecha_fin: '2023-11-30',
-        dias_semana: 'Daily',
-        rango_tiempo_inicio: '21:00',
-        rango_tiempo_fin: '21:30',
-        recordatorio: true,
-        recordatorio_hora: '20:45',
-        completed: true,
-      },
-  ]);
+const HabitHistoryScreen = ({ route, navigation}) => {
+  const { userId } = route.params;
+  const [habits, setHabits] = useState([]);
+
+  useEffect(() => {
+    const fetchHabits = async () => {
+      try {
+        // Obtener hábitos del usuario
+        const habitsResponse = await axios.get(
+          `http://192.168.1.143:8000/api/habitos/?userId=${userId}`
+        );
+        const habitsData = habitsResponse.data || []; // Verifica que haya datos
+        
+        // Actualizar el estado directamente
+        setHabits(habitsData);
+      } catch (error) {
+        console.error('Error al obtener los hábitos:', error);
+        alert('No se pudieron cargar los datos. Intenta nuevamente.');
+      }
+    };
+
+    fetchHabits();
+  }, [userId]); // El efecto depende del userId
+
 
   useEffect(() => {
     if (route.params?.habits) {

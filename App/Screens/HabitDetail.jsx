@@ -1,14 +1,25 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 
 const HabitDetailScreen = ({ route, navigation }) => {
   const { habit, userId } = route.params;
 
+ 
   const handleEditHabit = () => {
-    navigation.navigate('EditHabit', {habit, userId});
+    const validatedHabit = {
+      ...habit,
+      fecha_inicio: new Date(habit.fecha_inicio), // Asegúrate de que sea un objeto Date
+      fecha_fin: habit.fecha_fin ? new Date(habit.fecha_fin) : null, // Validar si existe fecha_fin
+      rango_tiempo_inicio: new Date(`1970-01-01T${habit.rango_tiempo_inicio}`), // Convertir rangos de tiempo
+      rango_tiempo_fin: new Date(`1970-01-01T${habit.rango_tiempo_fin}`),
+      recordatorio_hora: new Date(`1970-01-01T${habit.recordatorio_hora}`), // Lo mismo para el recordatorio
+    };
+  
+    navigation.navigate('EditHabit', { habit: validatedHabit, userId });
   };
 
+  
   const handleDeleteHabit = async () => {
     try {
       const response = await axios.delete(
@@ -17,7 +28,16 @@ const HabitDetailScreen = ({ route, navigation }) => {
       );
 
       if (response.status === 204) {
-        navigation.navigate('HomeScreen')
+        Alert.alert(
+          'Hábito eliminado',
+          `El hábito ha sido eliminado exitosamente.`,
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.navigate('HomeScreen'),
+            },
+          ]
+        );
       }
     } catch (error) {
       console.error('Error al eliminar el hábito:', error);
