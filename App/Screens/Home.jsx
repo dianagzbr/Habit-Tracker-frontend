@@ -45,6 +45,7 @@ const HomeScreen = ({ navigation }) => {
         const { username, id } = response.data;
         setName(username);
         setUserId(id);
+        console.log(id);
       } catch (error) {
         console.error('Error al obtener los datos del perfil:', error);
         Alert.alert('Error', 'No se pudo cargar la información del perfil.');
@@ -92,7 +93,7 @@ const HomeScreen = ({ navigation }) => {
   
         // Obtener ejecuciones del día actual para el usuario
         const executionsResponse = await axios.get(
-          `http://192.168.1.143:8000/api/ejecuciones/?userId=${userId}&fecha=${formattedDate}`
+          `http://192.168.1.143:8000/api/ejecuciones/filtrar_por_usuario_y_fecha/?userId=${userId}&fecha=${formattedDate}`
         );
         const executionData = executionsResponse.data || []; // Verifica que haya datos
   
@@ -183,7 +184,7 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.dateText}>{currentDate}</Text>
             <Text style={styles.greetingText}>Hola, <Text style={styles.usernameText}>{name || 'Cargando...'}</Text></Text>
 
-            <TouchableOpacity onPress={() => navigation.navigate("ProgressScreen")}>
+            <TouchableOpacity onPress={() => navigation.navigate("ProgressScreen", {userId})}>
               <View style={styles.progressCard}>
                 <Text style={styles.progressText}>{calculateProgress()}%</Text>
                 <Text style={styles.habitsText}>{habits.filter((habit) => habit.completed).length} de {habits.length} hábitos completados hoy!</Text>

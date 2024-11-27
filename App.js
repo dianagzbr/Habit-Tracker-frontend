@@ -7,7 +7,7 @@ import 'react-native-gesture-handler';
 import StackNavigation from './App/Navigation/StackNavigation';
 
 const Stack = createStackNavigator();
-
+/*
 import { useState, useEffect, useRef } from 'react';
 import { Text, View, Button, Platform } from 'react-native';
 import * as Device from 'expo-device';
@@ -140,7 +140,7 @@ export default function App() {
   );
 }
 
-
+*/
 
 export default function App() {
   return (

@@ -6,7 +6,8 @@ import axios from "axios";
 
 const screenWidth = Dimensions.get('window').width;
 
-const ProgressScreen = ({ userId }) => {
+const ProgressScreen = ({ route, navigation}) => {
+  const { userId } = route.params;
   const [estadisticas, setEstadisticas] = useState([]);
 
   // Cargar estadísticas al montar el componente
@@ -16,11 +17,16 @@ const ProgressScreen = ({ userId }) => {
 
   // Función para obtener estadísticas desde la API
   const fetchEstadisticas = async () => {
+    const date = new Date();
+    const formattedDate = date.toISOString().split('T')[0];
     try {
       const response = await axios.get(
-        `http://192.168.1.143:8000/api/estadisticas/?userId=${userId}`
+        `http://192.168.1.143:8000/api/estadisticas/filtrar_por_usuario_y_fecha/?userId=${userId}&fecha=${formattedDate}`
       );
-      setEstadisticas(response.data); // Guardamos las estadísticas en el estado
+
+      const estadisticas = response.data.estadisticas || [];  // Asegura que sea un array
+
+      setEstadisticas(estadisticas); // Guardamos las estadísticas en el estado
     } catch (error) {
       console.error(
         'Error al obtener las estadísticas:',
@@ -59,16 +65,17 @@ const ProgressScreen = ({ userId }) => {
           hideLegend={true}
         />
         <Text style={styles.percentageText}>
-          {efectividad * 100}% Efectividad
+          {Math.round(efectividad * 100)}% Efectividad
         </Text>
       </View>
     );
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
       <Text style={styles.title}>Progreso</Text>
       {estadisticas.map((stat) => renderHabitStat(stat))}
+      <Text style={styles.title}></Text>
     </ScrollView>
   );
 };
