@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, FlatList, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, FlatList, Switch, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import EmojiPicker from 'rn-emoji-keyboard';
 import CustomModal from '../Components/CustomModal';
@@ -18,6 +18,7 @@ const AddHabitScreen = ({ route, navigation }) => {
     rango_tiempo_inicio: new Date(`1970-01-01T${habit.rango_tiempo_inicio}`),
     rango_tiempo_fin: new Date(`1970-01-01T${habit.rango_tiempo_fin}`),
     recordatorio_hora: new Date(`1970-01-01T${habit.recordatorio_hora}`),
+    usuario: habit.usuario,
   });
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -30,6 +31,7 @@ const AddHabitScreen = ({ route, navigation }) => {
 
   const handleInputChange = (field, value) => {
     setHabit({ ...newhabit, [field]: value });
+    setHabit({ ...habit, [field]: value });
   };
 
   const handleDateChange = (event, selectedDate, field) => {
@@ -44,7 +46,7 @@ const AddHabitScreen = ({ route, navigation }) => {
   };
 
   const formatDate = (date) => {
-    const day = String(date.getDate()).padStart(2, '0');
+    const day = String(date.getDate() + 1).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
@@ -58,28 +60,23 @@ const AddHabitScreen = ({ route, navigation }) => {
 
   const validateForm = () => {
     if (!newhabit.nombre.trim()) {
-      setModalMessage('El nombre del hábito es obligatorio.');
-      setModalVisible(true);
+      Alert.alert('Error','El nombre del hábito es obligatorio.');
       return false;
     }
     if (!newhabit.fecha_inicio) {
-      setModalMessage('La fecha de inicio es obligatoria.');
-      setModalVisible(true);
+      Alert.alert('Error','La fecha de inicio es obligatoria.');
       return false;
     }
     if (!newhabit.fecha_fin) {
-      setModalMessage('La fecha de fin es obligatoria.');
-      setModalVisible(true);
+      Alert.alert('Error','La fecha de fin es obligatoria.');
       return false;
     }
     if (!newhabit.rango_tiempo_inicio || !habit.rango_tiempo_fin) {
-      setModalMessage('El rango de tiempo de inicio y fin son obligatorios.');
-      setModalVisible(true);
+      Alert.alert('Error','El rango de tiempo de inicio y fin son obligatorios.');
       return false;
     }
     if (newhabit.fecha_fin < habit.fecha_inicio) {
-      setModalMessage('La fecha de fin no puede ser anterior a la fecha de inicio.');
-      setModalVisible(true);
+      Alert.alert('Error','La fecha de fin no puede ser anterior a la fecha de inicio.');
       return false;
     }
     return true;
@@ -106,16 +103,14 @@ const AddHabitScreen = ({ route, navigation }) => {
       axios
         .put(`http://192.168.1.143:8000/api/habitos/${habit.id}/`, habitData)
         .then((response) => {
-          setModalMessage('¡Hábito actualizado con éxito!');
-          setModalVisible(true);
+          Alert.alert('Exito','¡Hábito actualizado con éxito!');
 
           navigation.navigate('HomeScreen');
         })
         .catch((error) => {
           const errorMessage =
             error.response?.data?.detail || 'Ocurrió un error al actualizar el hábito.';
-          setModalMessage(`Error: ${errorMessage}`);
-          setModalVisible(true);
+          Alert.alert(`Error:`, `${errorMessage}`);
         });
     }
   };

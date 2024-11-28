@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, FlatList, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, FlatList, Switch, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import EmojiPicker from 'rn-emoji-keyboard';
 import CustomModal from '../Components/CustomModal';
@@ -62,28 +62,23 @@ const AddHabitScreen = ({ navigation }) => {
 
   const validateForm = () => {
     if (!habit.nombre.trim()) {
-      setModalMessage('El nombre del hábito es obligatorio.');
-      setModalVisible(true);
+      Alert.Alert('Error','El nombre del hábito es obligatorio.');
       return false;
     }
     if (!habit.fecha_inicio) {
-      setModalMessage('La fecha de inicio es obligatoria.');
-      setModalVisible(true);
+      Alert.Alert('Error','La fecha de inicio es obligatoria.');
       return false;
     }
     if (!habit.fecha_fin) {
-      setModalMessage('La fecha de fin es obligatoria.');
-      setModalVisible(true);
+      Alert.Alert('Error','La fecha de fin es obligatoria.');
       return false;
     }
     if (!habit.rango_tiempo_inicio || !habit.rango_tiempo_fin) {
-      setModalMessage('El rango de tiempo de inicio y fin son obligatorios.');
-      setModalVisible(true);
+      Alert.Alert('Error','El rango de tiempo de inicio y fin son obligatorios.');
       return false;
     }
     if (habit.fecha_fin < habit.fecha_inicio) {
-      setModalMessage('La fecha de fin no puede ser anterior a la fecha de inicio.');
-      setModalVisible(true);
+      Alert.Alert('Error','La fecha de fin no puede ser anterior a la fecha de inicio.');
       return false;
     }
     return true;
@@ -107,15 +102,13 @@ const AddHabitScreen = ({ navigation }) => {
       axios.post('http://192.168.1.143:8000/api/habitos/', habitData, { },
         )
         .then((response) => {
-          setModalMessage('¡Hábito guardado con éxito!');
-          setModalVisible(true);
+          Alert.alert('Exito', '¡Hábito guardado con éxito!');
           navigation.navigate('HomeScreen');
         })
         .catch((error) => {
           const errorMessage =
             error.response?.data?.detail || 'Ocurrió un error al guardar el hábito.';
-          setModalMessage(`Error: ${errorMessage}`);
-          setModalVisible(true);
+            Alert.Alert(`Error:`, `${errorMessage}`);
         });
         
     }

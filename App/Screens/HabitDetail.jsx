@@ -7,6 +7,7 @@ const HabitDetailScreen = ({ route, navigation }) => {
 
  
   const handleEditHabit = () => {
+    
     const validatedHabit = {
       ...habit,
       fecha_inicio: new Date(habit.fecha_inicio), // Asegúrate de que sea un objeto Date
@@ -14,6 +15,7 @@ const HabitDetailScreen = ({ route, navigation }) => {
       rango_tiempo_inicio: new Date(`1970-01-01T${habit.rango_tiempo_inicio}`), // Convertir rangos de tiempo
       rango_tiempo_fin: new Date(`1970-01-01T${habit.rango_tiempo_fin}`),
       recordatorio_hora: new Date(`1970-01-01T${habit.recordatorio_hora}`), // Lo mismo para el recordatorio
+      usuario: habit.usuario,
     };
   
     navigation.navigate('EditHabit', { habit: validatedHabit, userId });

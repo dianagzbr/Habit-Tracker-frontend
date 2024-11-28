@@ -36,9 +36,9 @@ const ResetPasswordScreen = ({ route, navigation }) => {
           await AsyncStorage.setItem("authToken", token);
           console.log("Token guardado:", token);
 
-          Alert.alert("Nuevo registro de contraseña exitoso", `Bienvenido, ${user.username}!`);
+          Alert.alert("Nuevo registro de contraseña exitoso", `Ingresa de nuevo`);
           const userId = response.data.id
-          navigation.navigate('HomeScreen', {userId});
+          navigation.navigate('LoginScreen', {userId});
         } else {
           Alert.alert('Error', 'Hubo un error en el registro. Inténtalo nuevamente.');
         }

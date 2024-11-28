@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
@@ -15,13 +15,11 @@ const LoginScreen = ({ navigation }) => {
 
   const validateForm = () => {
     if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setModalMessage('Por favor, ingresa una dirección de correo electrónico válida.');
-      setModalVisible(true);
+      Alert.alert('Error', 'Por favor, ingresa una dirección de correo electrónico válida.');
       return false;
     }
     if (password.length < 8) {
-      setModalMessage('La contraseña debe tener al menos 8 caracteres.');
-      setModalVisible(true);
+      Alert.alert('Error','La contraseña debe tener al menos 8 caracteres');
       return false;
     }
     return true;
@@ -42,27 +40,25 @@ const LoginScreen = ({ navigation }) => {
           await AsyncStorage.setItem('authToken', token);
           console.log('Token saved:', token);
   
-          setModalMessage(`¡Inicio de Sesión Exitoso! Bienvenido, ${user.username}!`);
-          setModalVisible(true);
+          Alert.alert(`¡Inicio de Sesión Exitoso!`, `Bienvenido, ${user.username}!`);
           navigation.navigate('HomeScreen', { userId: user.id });
         }
       } catch (error) {
         if (error.response) {
           const { status } = error.response;
-
           if (status === 404) {
-            setModalMessage('Error: El correo electrónico no esta registrado.');
+            Alert.alert('Error', 'El correo electrónico no esta registrado.');
           } else if (status === 400) {
-            setModalMessage('Error: La contraseña es incorrecta.');
+            Alert.alert('Error', 'La contraseña es incorrecta.');
           } else {
-            setModalMessage(`Error inesperado: ${status}`);
+            Alert.alert('Error', 'Error inesperado: ${status}');
           }
         } else if (error.request) {
           console.error('Network error:', error.request);
-          setModalMessage('Error: No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.');
+          Alert.alert('Error', 'No se pudo conectar al servidor. Por favor, verifica tu conexión a Internet.');
         } else {
           console.error('Error:', error.message);
-          setModalMessage('Error: A ocurrido un error inesperado.');
+          Alert.alert('Error', 'A ocurrido un error inesperado.');
         }
       }
       //navigation.navigate('HomeScreen');  

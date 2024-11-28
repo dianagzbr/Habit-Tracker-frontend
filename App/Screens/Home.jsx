@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialIcons, AntDesign } from '@expo/vector-icons';
 import axios from 'axios';
@@ -153,6 +153,23 @@ const HomeScreen = ({ navigation }) => {
       );
   
       console.log("Hábito completado:", response.data);
+      function mostrarMensajeMotivacion() {
+        // Generar un número aleatorio entre 1 y 3
+        const numero = Math.floor(Math.random() * 3) + 1;
+      
+        // Verificar el número y devolver un mensaje
+        if (numero === 1) {
+          Alert.alert('¡Gran trabajo! Cada pequeño paso te acerca a tu meta. 🚀');
+        } else if (numero === 2) {
+          Alert.alert('¡Sigue adelante! La constancia es la clave del éxito. 💪');
+        } else if (numero === 3) {
+          Alert.alert('¡Lo estás logrando! Recuerda, el esfuerzo vale la pena. 🌟');
+        }
+      }
+      
+
+      // Ejemplo: Llamar a la función al marcar un hábito
+      mostrarMensajeMotivacion();
   
       // Actualizar el estado local para reflejar el cambio
       setHabits((prevHabits) =>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
 import CustomModal from '../Components/CustomModal';
@@ -16,28 +16,23 @@ const SignUpScreen = ({ navigation }) => {
 
   const validateForm = () => {
     if (!name.trim()) {
-      setModalMessage('El nombre es obligatorio.');
-      setModalVisible(true);
+      Alert.alert('Error','El nombre es obligatorio.');
       return false;
     }
     if(name.includes(' ')) {
-      setModalMessage('No se permiten espacios en el nombre.Por favor, use guiones bajos (_) en su lugar.');
-      setModalVisible(true);
+      Alert.alert('Error','No se permiten espacios en el nombre.Por favor, use guiones bajos (_) en su lugar.');
       return false;
     }
     if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setModalMessage('Por favor, ingrese una dirección de correo electrónico válida.');
-      setModalVisible(true);
+      Alert.alert('Error','Por favor, ingrese una dirección de correo electrónico válida.');
       return false;
     }
     if (password.length < 8) {
-      setModalMessage('La contraseña debe tener al menos 8 caracteres.');
-      setModalVisible(true);
+      Alert.alert('Error','La contraseña debe tener al menos 8 caracteres.');
       return false;
     }
     if (password !== passwordConfirmation) {
-      setModalMessage('Las contraseñas no coinciden.');
-      setModalVisible(true);
+      Alert.alert('error','Las contraseñas no coinciden.');
       return false;
     }
     return true;
@@ -61,41 +56,35 @@ const SignUpScreen = ({ navigation }) => {
             console.log(message);
             console.log('Respuesta del backend:', sendCodeResponse.data);
 
-            setModalMessage('Datos válidos. Revisa tu correo electrónico.');
-            setModalVisible(true);
+            Alert.alert('Datos validos','Revisa tu correo electrónico para que lo podamos comprobar');
             // Navega a la pantalla de verificación
             navigation.navigate('VerifyEmailScreen', { 
               OTPtoken: sendCodeResponse.data.code,
               userData: { name, email, password }
             });
           } else {
-            setModalMessage('Hubo un problema al enviar el código OTP. Inténtalo de nuevo.');
-            setModalVisible(true);
+            Alert.alert('Error','Hubo un problema al enviar el código OTP. Inténtalo de nuevo.');
           }
         } else {
-          setModalMessage('El correo o el nombre de usuario no están registrados.');
-          setModalVisible(true);
+          Alert.alert('error','El correo o el nombre de usuario no están registrados.');
         }
       } catch (error) {
         if (error.response) {
           const { status } = error.response;
 
           if (status === 400) {
-            setModalMessage('El correo electrónico o el nombre de usuario ya están registrados.');
+            Alert.alert('Error','El correo electrónico o el nombre de usuario ya están registrados.');
           }  else {
-            setModalMessage(`Error inesperado: ${status}`);
+            Alert.alert(`Error inesperado: ${status}`);
           }
         } else if (error.request) {
           console.error('Network error:', error.request);
-          setModalMessage('No se pudo conectar al servidor. Por favor verifique su conexión a Internet.');
+          Alert.alert('Error','No se pudo conectar al servidor. Por favor verifique su conexión a Internet.');
         } else {
           console.error('Error:', error.message);
-          setModalMessage('Ocurrió un error inesperado.');
+          Alert.alert('Error','Ocurrió un error inesperado.');
         }
       }
-
-      setModalMessage('¡Formulario válido! Procediendo con el registro...');
-      setModalVisible(true);
     }
 };
 
