@@ -5,7 +5,7 @@ import { AntDesign, Entypo } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 
-const AccountScreen = () => {
+const AccountScreen = ({ navigation }) => {
   const [userId, setUserId] = useState(null); 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -66,6 +66,7 @@ const AccountScreen = () => {
         setEmail(email);
         setProfileImage(foto_perfil);
         setUserId(id);
+        navigation.navigate('HomeScreen');
       } catch (error) {
         console.error('Error al obtener los datos del perfil:', error);
         Alert.alert('Error', 'No se pudo cargar la información del perfil.');

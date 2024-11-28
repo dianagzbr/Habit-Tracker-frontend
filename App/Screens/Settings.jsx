@@ -1,10 +1,26 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
+  const pdfUrl = "https://drive.google.com/uc?export=download&id=1n07E0oV9hJJ4xhlnM5fYu9bnsljkY_Kq";
+  
+    // Función para abrir el PDF
+    const openPDF = async () => {
+      try {
+        const supported = await Linking.canOpenURL(pdfUrl); // Verifica si la URL es válida
+        if (supported) {
+          await Linking.openURL(pdfUrl); // Abre el PDF
+        } else {
+          Alert.alert("Error", "No se puede abrir el enlace al documento PDF.");
+        }
+      } catch (error) {
+        Alert.alert("Error", "Ocurrió un problema al intentar abrir el documento.");
+        console.error(error);
+      }
+    };
 
   return (
     <View style={styles.container}>
@@ -25,10 +41,16 @@ const SettingsScreen = () => {
         <AntDesign name="right" size={20} color="#777" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('UserManual')}>
+      <TouchableOpacity style={styles.settingItem} onPress={openPDF}>
         <Text style={styles.settingText}>Manual de Usuario</Text>
         <AntDesign name="right" size={20} color="#777" />
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('LoginScreen')}>
+        <Text style={styles.settingText}>Salir</Text>
+        <AntDesign name="right" size={20} color="#777" />
+      </TouchableOpacity>
+    
     </View>
   );
 };

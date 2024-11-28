@@ -154,10 +154,7 @@ const HomeScreen = ({ navigation }) => {
   
       console.log("Hábito completado:", response.data);
       function mostrarMensajeMotivacion() {
-        // Generar un número aleatorio entre 1 y 3
         const numero = Math.floor(Math.random() * 3) + 1;
-      
-        // Verificar el número y devolver un mensaje
         if (numero === 1) {
           Alert.alert('¡Gran trabajo! Cada pequeño paso te acerca a tu meta. 🚀');
         } else if (numero === 2) {
@@ -166,9 +163,6 @@ const HomeScreen = ({ navigation }) => {
           Alert.alert('¡Lo estás logrando! Recuerda, el esfuerzo vale la pena. 🌟');
         }
       }
-      
-
-      // Ejemplo: Llamar a la función al marcar un hábito
       mostrarMensajeMotivacion();
   
       // Actualizar el estado local para reflejar el cambio
